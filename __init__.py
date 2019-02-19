@@ -40,18 +40,16 @@ if "bpy" in locals():
 
 import bpy
 from bpy.props import (
-        BoolProperty,
-        EnumProperty,
-        FloatProperty,
-        StringProperty,
-        )
+    BoolProperty,
+    FloatProperty,
+    StringProperty,
+)
 from bpy_extras.io_utils import (
-        ImportHelper,
-        ExportHelper,
-        orientation_helper_factory,
-        axis_conversion,
-        path_reference_mode,
-        )
+    ExportHelper,
+    orientation_helper_factory,
+    axis_conversion,
+    path_reference_mode,
+)
 
 
 IOX3DOrientationHelper = orientation_helper_factory("IOX3DOrientationHelper", axis_forward='Z', axis_up='Y')
@@ -67,41 +65,41 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
     filter_glob = StringProperty(default="*.wbt", options={'HIDDEN'})
 
     use_selection = BoolProperty(
-            name="Selection Only",
-            description="Export selected objects only",
-            default=False,
-            )
+        name="Selection Only",
+        description="Export selected objects only",
+        default=False,
+    )
     use_mesh_modifiers = BoolProperty(
-            name="Apply Modifiers",
-            description="Use transformed mesh data from each object",
-            default=True,
-            )
+        name="Apply Modifiers",
+        description="Use transformed mesh data from each object",
+        default=True,
+    )
     use_triangulate = BoolProperty(
-            name="Triangulate",
-            description="Write quads into 'IndexedTriangleSet'",
-            default=False,
-            )
+        name="Triangulate",
+        description="Write quads into 'IndexedTriangleSet'",
+        default=False,
+    )
     use_normals = BoolProperty(
-            name="Normals",
-            description="Write normals with geometry",
-            default=False,
-            )
+        name="Normals",
+        description="Write normals with geometry",
+        default=False,
+    )
     use_hierarchy = BoolProperty(
-            name="Hierarchy",
-            description="Export parent child relationships",
-            default=True,
-            )
+        name="Hierarchy",
+        description="Export parent child relationships",
+        default=True,
+    )
     name_decorations = BoolProperty(
-            name="Name decorations",
-            description=("Add prefixes to the names of exported nodes to "
-                         "indicate their type"),
-            default=True,
-            )
+        name="Name decorations",
+        description=("Add prefixes to the names of exported nodes to "
+                     "indicate their type"),
+        default=True,
+    )
     global_scale = FloatProperty(
-            name="Scale",
-            min=0.01, max=1000.0,
-            default=1.0,
-            )
+        name="Scale",
+        min=0.01, max=1000.0,
+        default=1.0,
+    )
 
     path_mode = path_reference_mode
 
@@ -140,8 +138,6 @@ def unregister():
 
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
-# NOTES
-# - blender version is hardcoded
 
 if __name__ == "__main__":
     register()

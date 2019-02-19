@@ -115,8 +115,8 @@ def clean_def(txt):
         0x5d: "_",  # ]
         0x5c: "_",  # \
         0x7b: "_",  # {
-        0x7d: "_",  # }
-        })
+        0x7d: "_"  # }
+    })
 
 
 def build_hierarchy(objects):
@@ -216,8 +216,6 @@ def export(file,
     fw = file.write
     base_src = os.path.dirname(bpy.data.filepath)
     base_dst = os.path.dirname(file.name)
-    filename_strip = os.path.splitext(os.path.basename(file.name))[0]
-    gpu_shader_cache = {}
 
     # -------------------------------------------------------------------------
     # File Writing Functions
@@ -258,8 +256,7 @@ def export(file,
         rot = rot.to_axis_angle()
         rot = (*rot[0].normalized(), rot[1])
 
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<Viewpoint ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<Viewpoint ' % ident)))
         fw('DEF=%s\n' % view_id)
         fw(ident_step + 'centerOfRotation="0 0 0"\n')
         fw(ident_step + 'position="%3.2f %3.2f %3.2f"\n' % loc[:])
@@ -275,8 +272,7 @@ def export(file,
             return
 
         if mparam.use_mist:
-            ident_step = ident + (' ' * (-len(ident) + \
-            fw('%s<Fog ' % ident)))
+            ident_step = ident + (' ' * (-len(ident) + fw('%s<Fog ' % ident)))
             fw('fogType="%s"\n' % ('LINEAR' if (mtype == 'LINEAR') else 'EXPONENTIAL'))
             fw(ident_step + 'color="%.3f %.3f %.3f"\n' % clight_color(world.horizon_color))
             fw(ident_step + 'visibilityRange="%.3f"\n' % mparam.depth)
@@ -285,8 +281,7 @@ def export(file,
             return
 
     def writeNavigationInfo(ident, scene, has_light):
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<NavigationInfo ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<NavigationInfo ' % ident)))
         fw('headlight="%s"\n' % bool_as_str(not has_light))
         fw(ident_step + 'visibilityLimit="0.0"\n')
         fw(ident_step + 'type=\'"EXAMINE", "ANY"\'\n')
@@ -294,8 +289,7 @@ def export(file,
         fw(ident_step + '/>\n')
 
     def writeTransform_begin(ident, matrix, def_id):
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<Transform ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<Transform ' % ident)))
         if def_id is not None:
             fw('DEF=%s\n' % def_id)
         else:
@@ -341,8 +335,7 @@ def export(file,
 
         radius = lamp.distance * math.cos(beamWidth)
         # radius = lamp.dist*math.cos(beamWidth)
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<SpotLight ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<SpotLight ' % ident)))
         fw('DEF=%s\n' % light_id)
         fw(ident_step + 'radius="%.4f"\n' % radius)
         fw(ident_step + 'ambientIntensity="%.4f"\n' % amb_intensity)
@@ -370,8 +363,7 @@ def export(file,
 
         orientation = matrix_direction_neg_z(matrix)
 
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<DirectionalLight ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<DirectionalLight ' % ident)))
         fw('DEF=%s\n' % light_id)
         fw(ident_step + 'ambientIntensity="%.4f"\n' % amb_intensity)
         fw(ident_step + 'color="%.4f %.4f %.4f"\n' % clight_color(lamp.color))
@@ -394,8 +386,7 @@ def export(file,
         intensity = min(lamp.energy / 1.75, 1.0)
         location = matrix.to_translation()[:]
 
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<PointLight ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<PointLight ' % ident)))
         fw('DEF=%s\n' % light_id)
         fw(ident_step + 'ambientIntensity="%.4f"\n' % amb_intensity)
         fw(ident_step + 'color="%.4f %.4f %.4f"\n' % clight_color(lamp.color))
@@ -571,8 +562,7 @@ def export(file,
                             else:
                                 rot = 0.0
 
-                            ident_step = ident + (' ' * (-len(ident) + \
-                            fw('%s<TextureTransform ' % ident)))
+                            ident_step = ident + (' ' * (-len(ident) + fw('%s<TextureTransform ' % ident)))
                             fw('\n')
                             # fw('center="%.6f %.6f" ' % (0.0, 0.0))
                             fw(ident_step + 'translation="%.6f %.6f"\n' % loc)
@@ -588,10 +578,9 @@ def export(file,
 
                     mesh_faces_uv = mesh.tessface_uv_textures.active.data if is_uv else None
 
-                    #-- IndexedFaceSet or IndexedLineSet
+                    # --- IndexedFaceSet or IndexedLineSet
                     if use_triangulate:
-                        ident_step = ident + (' ' * (-len(ident) + \
-                        fw('%s<IndexedTriangleSet ' % ident)))
+                        ident_step = ident + (' ' * (-len(ident) + fw('%s<IndexedTriangleSet ' % ident)))
 
                         # --- Write IndexedTriangleSet Attributes (same as IndexedFaceSet)
                         fw('solid="%s"\n' % bool_as_str(material and material.game_settings.use_backface_culling))
@@ -710,8 +699,7 @@ def export(file,
                         fw('%s</IndexedTriangleSet>\n' % ident)
 
                     else:
-                        ident_step = ident + (' ' * (-len(ident) + \
-                        fw('%s<IndexedFaceSet ' % ident)))
+                        ident_step = ident + (' ' * (-len(ident) + fw('%s<IndexedFaceSet ' % ident)))
 
                         # --- Write IndexedFaceSet Attributes (same as IndexedTriangleSet)
                         fw('solid="%s"\n' % bool_as_str(material and material.game_settings.use_backface_culling))
@@ -766,8 +754,7 @@ def export(file,
                                 if use_normals:
                                     fw('%s<Normal USE=%s />\n' % (ident, mesh_id_normals))
                             else:
-                                ident_step = ident + (' ' * (-len(ident) + \
-                                fw('%s<Coordinate ' % ident)))
+                                ident_step = ident + (' ' * (-len(ident) + fw('%s<Coordinate ' % ident)))
                                 fw('DEF=%s\n' % mesh_id_coords)
                                 fw(ident_step + 'point="')
                                 for v in mesh.vertices:
@@ -778,8 +765,7 @@ def export(file,
                                 is_coords_written = True
 
                                 if use_normals:
-                                    ident_step = ident + (' ' * (-len(ident) + \
-                                    fw('%s<Normal ' % ident)))
+                                    ident_step = ident + (' ' * (-len(ident) + fw('%s<Normal ' % ident)))
                                     fw('DEF=%s\n' % mesh_id_normals)
                                     fw(ident_step + 'vector="')
                                     for v in mesh.vertices:
@@ -804,15 +790,15 @@ def export(file,
                                 for i in range(len(mesh.vertices)):
                                     # may be None,
                                     fw('%.3f %.3f %.3f ' % (vert_color[i] or (0.0, 0.0, 0.0)))
-                            else: # Export as colors per face.
+                            else:  # Export as colors per face.
                                 # TODO: average them rather than using the first one!
                                 for i in face_group:
                                     fw('%.3f %.3f %.3f ' % mesh_faces_col[i].color1[:])
                             fw('" />\n')
 
-                        #--- output vertexColors
+                        # --- output vertexColors
 
-                        #--- output closing braces
+                        # --- output closing braces
                         ident = ident[:-1]
 
                         fw('%s</IndexedFaceSet>\n' % ident)
@@ -822,9 +808,9 @@ def export(file,
 
                     # XXX
 
-            #fw('%s<PythonScript DEF="PS" url="object.py" >\n' % ident)
-            #fw('%s    <ShaderProgram USE="MA_Material.005" containerField="references"/>\n' % ident)
-            #fw('%s</PythonScript>\n' % ident)
+            # fw('%s<PythonScript DEF="PS" url="object.py" >\n' % ident)
+            # fw('%s    <ShaderProgram USE="MA_Material.005" containerField="references"/>\n' % ident)
+            # fw('%s</PythonScript>\n' % ident)
 
             ident = ident[:-1]
             fw('%s</Group>\n' % ident)
@@ -862,8 +848,7 @@ def export(file,
                 shininess = 0.0
                 specColor = emitColor = diffuseColor
 
-            ident_step = ident + (' ' * (-len(ident) + \
-            fw('%s<Material ' % ident)))
+            ident_step = ident + (' ' * (-len(ident) + fw('%s<Material ' % ident)))
             fw('DEF=%s\n' % material_id)
             fw(ident_step + 'diffuseColor="%.3f %.3f %.3f"\n' % clight_color(diffuseColor))
             fw(ident_step + 'specularColor="%.3f %.3f %.3f"\n' % clight_color(specColor))
@@ -873,7 +858,6 @@ def export(file,
             fw(ident_step + 'transparency="%s"\n' % transp)
             fw(ident_step + '/>\n')
 
-
     def writeImageTexture(ident, image):
         image_id = quoteattr(unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_"))
 
@@ -882,8 +866,7 @@ def export(file,
         else:
             image.tag = True
 
-            ident_step = ident + (' ' * (-len(ident) + \
-            fw('%s<ImageTexture ' % ident)))
+            ident_step = ident + (' ' * (-len(ident) + fw('%s<ImageTexture ' % ident)))
             fw('DEF=%s\n' % image_id)
 
             # collect image paths, can load multiple
@@ -920,8 +903,7 @@ def export(file,
         sky_triple = clight_color(world.zenith_color)
         mix_triple = clight_color((grd_triple[i] + sky_triple[i]) / 2.0 for i in range(3))
 
-        ident_step = ident + (' ' * (-len(ident) + \
-        fw('%s<Background ' % ident)))
+        ident_step = ident + (' ' * (-len(ident) + fw('%s<Background ' % ident)))
         fw('DEF=%s\n' % world_id)
         # No Skytype - just Hor color
         if blending == (False, False, False):
@@ -1050,7 +1032,7 @@ def export(file,
                 else:
                     writeDirectionalLight(ident, obj, obj_matrix, data, world)
             else:
-                #print "Info: Ignoring [%s], object type [%s] not handle yet" % (object.name,object.getType)
+                # print('Info: Ignoring [%s], object type [%s] not handle yet' % (object.name,object.getType))
                 pass
 
         if free:
