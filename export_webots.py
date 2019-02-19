@@ -120,8 +120,7 @@ def clean_def(txt):
 
 
 def build_hierarchy(objects):
-    """ returns parent child relationships, skipping
-    """
+    """ Returns parent child relationships, skipping. """
     objects_set = set(objects)
     par_lookup = {}
 
@@ -1101,9 +1100,7 @@ def export(file,
 # Callbacks, needed before Main
 ##########################################################
 
-def save(context,
-         filepath,
-         *,
+def save(context, filepath, *,
          use_selection=True,
          use_mesh_modifiers=False,
          use_triangulate=False,
@@ -1111,8 +1108,7 @@ def save(context,
          use_hierarchy=True,
          global_matrix=None,
          path_mode='AUTO',
-         name_decorations=True
-         ):
+         name_decorations=True):
 
     bpy.path.ensure_ext(filepath, '.wbt')
 
@@ -1124,16 +1120,17 @@ def save(context,
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
 
-    export(file,
-           global_matrix,
-           context.scene,
-           use_mesh_modifiers=use_mesh_modifiers,
-           use_selection=use_selection,
-           use_triangulate=use_triangulate,
-           use_normals=use_normals,
-           use_hierarchy=use_hierarchy,
-           path_mode=path_mode,
-           name_decorations=name_decorations,
-           )
+    export(
+        file,
+        global_matrix,
+        context.scene,
+        use_mesh_modifiers=use_mesh_modifiers,
+        use_selection=use_selection,
+        use_triangulate=use_triangulate,
+        use_normals=use_normals,
+        use_hierarchy=use_hierarchy,
+        path_mode=path_mode,
+        name_decorations=name_decorations
+    )
 
     return {'FINISHED'}
