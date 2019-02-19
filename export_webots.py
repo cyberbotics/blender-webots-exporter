@@ -49,12 +49,12 @@ def matrix_direction_neg_z(matrix):
     return (matrix.to_3x3() * mathutils.Vector((0.0, 0.0, -1.0))).normalized()[:]
 
 
-def prefix_quoted_str(value, prefix):
-    return value[0] + prefix + value[1:]
+def prefix_string(value, prefix):
+    return prefix + value
 
 
-def suffix_quoted_str(value, suffix):
-    return value[:-1] + suffix + value[-1:]
+def suffix_string(value, suffix):
+    return value + suffix
 
 
 def bool_as_str(value):
@@ -255,8 +255,8 @@ def export(file,
     def writeIndexedFaceSet(obj, mesh, matrix, world):
         obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=clean_def, sep="_")
         mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=clean_def, sep="_")
-        mesh_id_group = prefix_quoted_str(mesh_id, group_)
-        mesh_id_coords = prefix_quoted_str(mesh_id, 'coords_')
+        mesh_id_group = prefix_string(mesh_id, group_)
+        mesh_id_coords = prefix_string(mesh_id, 'coords_')
 
         # tessellation faces may not exist
         if not mesh.tessfaces and mesh.polygons:
@@ -267,7 +267,7 @@ def export(file,
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when
         # hierarchys are used.
-        writeTransform_begin(matrix, suffix_quoted_str(obj_id, "_ifs" + _TRANSFORM))
+        writeTransform_begin(matrix, suffix_string(obj_id, "_ifs" + _TRANSFORM))
 
         if mesh.tag:
             fw('USE %s {}}\n' % (mesh_id_group))
@@ -551,7 +551,7 @@ def export(file,
 
             obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
 
-            writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_quoted_str(obj_main_id, _TRANSFORM))
+            writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
