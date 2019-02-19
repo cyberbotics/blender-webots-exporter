@@ -97,12 +97,6 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
                          "indicate their type"),
             default=True,
             )
-    use_h3d = BoolProperty(
-            name="H3D Extensions",
-            description="Export shaders for H3D",
-            default=False,
-            )
-
     global_scale = FloatProperty(
             name="Scale",
             min=0.01, max=1000.0,
