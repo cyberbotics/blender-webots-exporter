@@ -74,16 +74,6 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         description="Use transformed mesh data from each object",
         default=True,
     )
-    use_triangulate = BoolProperty(
-        name="Triangulate",
-        description="Write quads into 'IndexedTriangleSet'",
-        default=False,
-    )
-    use_normals = BoolProperty(
-        name="Normals",
-        description="Write normals with geometry",
-        default=False,
-    )
     use_hierarchy = BoolProperty(
         name="Hierarchy",
         description="Export parent child relationships",

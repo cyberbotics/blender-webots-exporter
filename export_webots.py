@@ -58,7 +58,7 @@ def suffix_quoted_str(value, suffix):
 
 
 def bool_as_str(value):
-    return ('false', 'true')[bool(value)]
+    return ('FALSE', 'TRUE')[bool(value)]
 
 
 def clean_def(txt):
@@ -148,8 +148,6 @@ def export(file,
            scene,
            use_mesh_modifiers=False,
            use_selection=True,
-           use_triangulate=False,
-           use_normals=False,
            use_hierarchy=True,
            path_mode='AUTO',
            name_decorations=True,
@@ -160,7 +158,7 @@ def export(file,
     # -------------------------------------------------------------------------
     import bpy_extras
     from bpy_extras.io_utils import unique_name
-    from xml.sax.saxutils import quoteattr, escape
+    from xml.sax.saxutils import escape
 
     if name_decorations:
         # If names are decorated, the uuid map can be split up
@@ -224,118 +222,41 @@ def export(file,
         fw('#VRML_SIM R2019a utf8\n')
         fw('WorldInfo {\n')
         fw('}\n')
+        fw('Viewpoint {\n')
+        fw('orientation -0.5 -0.852 -0.159 0.71\n')
+        fw('position -3.6 2.0 5.4\n')
+        fw('}\n')
+        fw('TexturedBackground {\n')
+        fw('}\n')
+        fw('TexturedBackgroundLight {\n')
+        fw('}\n')
 
     def writeFooter():
         pass
 
     def writeTransform_begin(matrix, def_id):
-        fw('<Transform ')
         if def_id is not None:
-            fw('DEF=%s\n' % def_id)
-        else:
-            fw('\n')
+            fw('DEF %s ' % def_id)
+        fw('Transform {\n')
 
         loc, rot, sca = matrix.decompose()
         rot = rot.to_axis_angle()
         rot = (*rot[0], rot[1])
 
-        fw('translation="%.6f %.6f %.6f"\n' % loc[:])
-        fw('scale="%.6f %.6f %.6f"\n' % sca[:])
-        fw('rotation="%.6f %.6f %.6f %.6f"\n' % rot)
-        fw('>\n')
+        fw('translation %.6f %.6f %.6f\n' % loc[:])
+        fw('scale %.6f %.6f %.6f\n' % sca[:])
+        fw('rotation %.6f %.6f %.6f %.6f\n' % rot)
+        fw('children [\n')
 
     def writeTransform_end():
+        fw(']\n')
         fw('}\n')
 
-    def writeSpotLight(obj, matrix, lamp, world):
-        # note, light_id is not re-used
-        light_id = quoteattr(unique_name(obj, LA_ + obj.name, uuid_cache_light, clean_func=clean_def, sep="_"))
-
-        if world:
-            ambi = world.ambient_color
-            amb_intensity = ((ambi[0] + ambi[1] + ambi[2]) / 3.0) / 2.5
-            del ambi
-        else:
-            amb_intensity = 0.0
-
-        # compute cutoff and beamwidth
-        intensity = min(lamp.energy / 1.75, 1.0)
-        beamWidth = lamp.spot_size * 0.37
-        # beamWidth=((lamp.spotSize*math.pi)/180.0)*.37
-        cutOffAngle = beamWidth * 1.3
-
-        orientation = matrix_direction_neg_z(matrix)
-
-        location = matrix.to_translation()[:]
-
-        radius = lamp.distance * math.cos(beamWidth)
-        # radius = lamp.dist*math.cos(beamWidth)
-        fw('<SpotLight ')
-        fw('DEF=%s\n' % light_id)
-        fw('radius="%.4f"\n' % radius)
-        fw('ambientIntensity="%.4f"\n' % amb_intensity)
-        fw('intensity="%.4f"\n' % intensity)
-        fw('color="%.4f %.4f %.4f"\n' % clight_color(lamp.color))
-        fw('beamWidth="%.4f"\n' % beamWidth)
-        fw('cutOffAngle="%.4f"\n' % cutOffAngle)
-        fw('direction="%.4f %.4f %.4f"\n' % orientation)
-        fw('location="%.4f %.4f %.4f"\n' % location)
-        fw('/>\n')
-
-    def writeDirectionalLight(obj, matrix, lamp, world):
-        # note, light_id is not re-used
-        light_id = quoteattr(unique_name(obj, LA_ + obj.name, uuid_cache_light, clean_func=clean_def, sep="_"))
-
-        if world:
-            ambi = world.ambient_color
-            # ambi = world.amb
-            amb_intensity = ((float(ambi[0] + ambi[1] + ambi[2])) / 3.0) / 2.5
-        else:
-            ambi = 0
-            amb_intensity = 0.0
-
-        intensity = min(lamp.energy / 1.75, 1.0)
-
-        orientation = matrix_direction_neg_z(matrix)
-
-        fw('<DirectionalLight ')
-        fw('DEF=%s\n' % light_id)
-        fw('ambientIntensity="%.4f"\n' % amb_intensity)
-        fw('color="%.4f %.4f %.4f"\n' % clight_color(lamp.color))
-        fw('intensity="%.4f"\n' % intensity)
-        fw('direction="%.4f %.4f %.4f"\n' % orientation)
-        fw('/>\n')
-
-    def writePointLight(obj, matrix, lamp, world):
-        # note, light_id is not re-used
-        light_id = quoteattr(unique_name(obj, LA_ + obj.name, uuid_cache_light, clean_func=clean_def, sep="_"))
-
-        if world:
-            ambi = world.ambient_color
-            # ambi = world.amb
-            amb_intensity = ((float(ambi[0] + ambi[1] + ambi[2])) / 3.0) / 2.5
-        else:
-            ambi = 0.0
-            amb_intensity = 0.0
-
-        intensity = min(lamp.energy / 1.75, 1.0)
-        location = matrix.to_translation()[:]
-
-        fw('<PointLight ')
-        fw('DEF=%s\n' % light_id)
-        fw('ambientIntensity="%.4f"\n' % amb_intensity)
-        fw('color="%.4f %.4f %.4f"\n' % clight_color(lamp.color))
-        fw('intensity="%.4f"\n' % intensity)
-        fw('radius="%.4f" \n' % lamp.distance)
-        fw('location="%.4f %.4f %.4f"\n' % location)
-        fw('/>\n')
-
     def writeIndexedFaceSet(obj, mesh, matrix, world):
-        obj_id = quoteattr(unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=clean_def, sep="_"))
-        mesh_id = quoteattr(unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=clean_def, sep="_"))
+        obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=clean_def, sep="_")
+        mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=clean_def, sep="_")
         mesh_id_group = prefix_quoted_str(mesh_id, group_)
         mesh_id_coords = prefix_quoted_str(mesh_id, 'coords_')
-        mesh_id_normals = prefix_quoted_str(mesh_id, 'normals_')
 
         # tessellation faces may not exist
         if not mesh.tessfaces and mesh.polygons:
@@ -349,15 +270,14 @@ def export(file,
         writeTransform_begin(matrix, suffix_quoted_str(obj_id, "_ifs" + _TRANSFORM))
 
         if mesh.tag:
-            fw('<Group USE=%s />\n' % (mesh_id_group))
+            fw('USE %s {}}\n' % (mesh_id_group))
         else:
             mesh.tag = True
 
-            fw('<Group DEF=%s>\n' % (mesh_id_group))
+            fw('DEF %s Group {\n' % (mesh_id_group))
+            fw('children [\n')
 
             is_uv = bool(mesh.tessface_uv_textures.active)
-            # is_col, defined for each material
-
             is_coords_written = False
 
             mesh_materials = mesh.materials[:]
@@ -384,7 +304,6 @@ def export(file,
             mesh_materials_use_face_texture = [getattr(material, 'use_face_texture', True) for material in mesh_materials]
 
             # fast access!
-            mesh_vertices = mesh.vertices[:]
             mesh_faces = mesh.tessfaces[:]
             mesh_faces_materials = [f.material_index for f in mesh_faces]
             mesh_faces_vertices = [f.vertices[:] for f in mesh_faces]
@@ -417,34 +336,11 @@ def export(file,
             face_groups_items = list(face_groups.items())
             face_groups_items.sort(key=lambda m: (m[0][0], getattr(m[0][1], 'name', '')))
 
-            is_col = (mesh.tessface_vertex_colors.active and (material is None or material.use_vertex_color_paint))
-            mesh_faces_col = mesh.tessface_vertex_colors.active.data if is_col else None
-
-            # Check if vertex colors can be exported in per-vertex mode.
-            # Do we have just one color per vertex in every face that uses the vertex?
-            if is_col:
-                def calc_vertex_color():
-                    vert_color = [None] * len(mesh.vertices)
-
-                    for i, face in enumerate(mesh_faces):
-                        fcol = mesh_faces_col[i]
-                        face_colors = (fcol.color1, fcol.color2, fcol.color3, fcol.color4)
-                        for j, vert_index in enumerate(face.vertices):
-                            if vert_color[vert_index] is None:
-                                vert_color[vert_index] = face_colors[j][:]
-                            elif vert_color[vert_index] != face_colors[j][:]:
-                                return False, ()
-
-                    return True, vert_color
-
-                is_col_per_vertex, vert_color = calc_vertex_color()
-                del calc_vertex_color
-
             for (material_index, image), face_group in face_groups_items:  # face_groups.items()
                 if face_group:
                     material = mesh_materials[material_index]
 
-                    fw('<Shape>\n')
+                    fw('Shape {\n')
 
                     is_smooth = False
 
@@ -459,15 +355,14 @@ def export(file,
                     # Also, creaseAngle is not supported for IndexedTriangleSet,
                     # so write normals when is_smooth (otherwise
                     # IndexedTriangleSet can have only all smooth/all flat shading).
-                    is_force_normals = use_triangulate and (is_smooth or is_uv or is_col)
-                    fw('<Appearance>\n')
+                    fw('appearance PBRAppearance {\n')
 
                     if image:
                         writeImageTexture(image)
 
                         if mesh_materials_use_face_texture[material_index]:
                             if image.use_tiles:
-                                fw('<TextureTransform scale="%s %s" />\n' % (image.tiles_x, image.tiles_y))
+                                fw('textureTransform TextureTransform { scale="%s %s" }\n' % (image.tiles_x, image.tiles_y))
                         else:
                             # transform by mtex
                             loc = mesh_material_mtex[material_index].offset[:2]
@@ -485,249 +380,95 @@ def export(file,
                             else:
                                 rot = 0.0
 
-                            fw('<TextureTransform ')
-                            fw('\n')
+                            fw('textureTransform TextureTransform {\n')
                             # fw('center="%.6f %.6f" ' % (0.0, 0.0))
-                            fw('translation="%.6f %.6f"\n' % loc)
-                            fw('scale="%.6f %.6f"\n' % (sca_x, sca_y))
-                            fw('rotation="%.6f"\n' % rot)
-                            fw('/>\n')
+                            fw('translation %.6f %.6f\n' % loc)
+                            fw('scale %.6f %.6f\n' % (sca_x, sca_y))
+                            fw('rotation %.6f\n' % rot)
+                            fw('}\n')
 
                     if material:
                         writeMaterial(material, world)
 
-                    fw('</Appearance>\n')
+                    fw('}\n')  # -- PBRAppearance
 
                     mesh_faces_uv = mesh.tessface_uv_textures.active.data if is_uv else None
 
-                    # --- IndexedFaceSet or IndexedLineSet
-                    if use_triangulate:
-                        fw('<IndexedTriangleSet ')
+                    fw('geometry IndexedFaceSet {\n')
 
-                        # --- Write IndexedTriangleSet Attributes (same as IndexedFaceSet)
-                        fw('solid="%s"\n' % bool_as_str(material and material.game_settings.use_backface_culling))
+                    # --- Write IndexedFaceSet Attributes (same as IndexedTriangleSet)
+                    fw('solid %s\n' % bool_as_str(material and material.game_settings.use_backface_culling))
+                    if is_smooth:
+                        # use Auto-Smooth angle, if enabled. Otherwise make
+                        # the mesh perfectly smooth by creaseAngle > pi.
+                        fw('creaseAngle %.4f\n' % (mesh.auto_smooth_angle if mesh.use_auto_smooth else 1.0))
 
-                        if use_normals or is_force_normals:
-                            fw('normalPerVertex="true"\n')
-                        else:
-                            # Tell X3D browser to generate flat (per-face) normals
-                            fw('normalPerVertex="false"\n')
+                    # for IndexedTriangleSet we use a uv per vertex so this isnt needed.
+                    if is_uv:
+                        fw('texCoordIndex [\n')
 
-                        slot_uv = None
-                        slot_col = None
+                        j = 0
+                        for i in face_group:
+                            if len(mesh_faces_vertices[i]) == 4:
+                                fw('%d %d %d %d -1 ' % (j, j + 1, j + 2, j + 3))
+                                j += 4
+                            else:
+                                fw('%d %d %d -1 ' % (j, j + 1, j + 2))
+                                j += 3
+                        fw(']\n')
+                        # --- end texCoordIndex
 
-                        if is_uv and is_col:
-                            slot_uv = 0
-                            slot_col = 1
-
-                            def vertex_key(fidx, f_cnr_idx):
-                                return (
-                                    mesh_faces_uv[fidx].uv[f_cnr_idx][:],
-                                    getattr(mesh_faces_col[fidx], "color%d" % (f_cnr_idx + 1))[:],
-                                )
-                        elif is_uv:
-                            slot_uv = 0
-
-                            def vertex_key(fidx, f_cnr_idx):
-                                return (
-                                    mesh_faces_uv[fidx].uv[f_cnr_idx][:],
-                                )
-                        elif is_col:
-                            slot_col = 0
-
-                            def vertex_key(fidx, f_cnr_idx):
-                                return (
-                                    getattr(mesh_faces_col[fidx], "color%d" % (f_cnr_idx + 1))[:],
-                                )
-                        else:
-                            # ack, not especially efficient in this case
-                            def vertex_key(fidx, f_cnr_idx):
-                                return None
-
-                        # build a mesh mapping dict
-                        vertex_hash = [{} for i in range(len(mesh.vertices))]
-                        # worst case every face is a quad
-                        face_tri_list = [[None, None, None] for i in range(len(mesh.tessfaces) * 2)]
-                        vert_tri_list = []
-                        totvert = 0
-                        totface = 0
-                        temp_face = [None] * 4
+                    if True:
+                        fw('coordIndex [')
                         for i in face_group:
                             fv = mesh_faces_vertices[i]
-                            for j, v_idx in enumerate(fv):
-                                key = vertex_key(i, j)
-                                vh = vertex_hash[v_idx]
-                                x3d_v = vh.get(key)
-                                if x3d_v is None:
-                                    x3d_v = key, v_idx, totvert
-                                    vh[key] = x3d_v
-                                    # key / original_vertex / new_vertex
-                                    vert_tri_list.append(x3d_v)
-                                    totvert += 1
-                                temp_face[j] = x3d_v
-
-                            if len(fv) == 4:
-                                f_iter = ((0, 1, 2), (0, 2, 3))
+                            if len(fv) == 3:
+                                fw('%i %i %i -1 ' % fv)
                             else:
-                                f_iter = ((0, 1, 2), )
+                                fw('%i %i %i %i -1 ' % fv)
 
-                            for f_it in f_iter:
-                                # loop over a quad as 2 tris
-                                f_tri = face_tri_list[totface]
-                                for ji, j in enumerate(f_it):
-                                    f_tri[ji] = temp_face[j]
-                                # quads run this twice
-                                totface += 1
+                        fw(']\n')
+                        # --- end coordIndex
 
-                        # clear unused faces
-                        face_tri_list[totface:] = []
+                    # --- Write IndexedFaceSet Elements
+                    if True:
+                        if is_coords_written:
+                            fw('coord USE=%s\n' % (mesh_id_coords))
+                        else:
+                            fw('coord ')
+                            fw('DEF %s ' % mesh_id_coords)
+                            fw('Coordinate {\n')
+                            fw('point [')
+                            for v in mesh.vertices:
+                                fw('%.6f %.6f %.6f ' % v.co[:])
+                            fw(']\n')
+                            fw('}\n')
 
-                        fw('index="')
-                        for x3d_f in face_tri_list:
-                            fw('%i %i %i ' % (x3d_f[0][2], x3d_f[1][2], x3d_f[2][2]))
-                        fw('"\n')
+                            is_coords_written = True
 
-                        # close IndexedTriangleSet
-                        fw('>\n')
+                    if is_uv:
+                        fw('texCoord TextureCoordinate [')
+                        for i in face_group:
+                            for uv in mesh_faces_uv[i].uv:
+                                fw('%.4f %.4f ' % uv[:])
+                        del mesh_faces_uv
+                        fw(']\n')
 
-                        fw('<Coordinate ')
-                        fw('point="')
-                        for x3d_v in vert_tri_list:
-                            fw('%.6f %.6f %.6f ' % mesh_vertices[x3d_v[1]].co[:])
-                        fw('" />\n')
+                    # --- output vertexColors
 
-                        if use_normals or is_force_normals:
-                            fw('<Normal ')
-                            fw('vector="')
-                            for x3d_v in vert_tri_list:
-                                fw('%.6f %.6f %.6f ' % mesh_vertices[x3d_v[1]].normal[:])
-                            fw('" />\n')
-
-                        if is_uv:
-                            fw('<TextureCoordinate point="')
-                            for x3d_v in vert_tri_list:
-                                fw('%.4f %.4f ' % x3d_v[0][slot_uv])
-                            fw('" />\n')
-
-                        if is_col:
-                            fw('<Color color="')
-                            for x3d_v in vert_tri_list:
-                                fw('%.3f %.3f %.3f ' % x3d_v[0][slot_col])
-                            fw('" />\n')
-
-                        fw('</IndexedTriangleSet>\n')
-
-                    else:
-                        fw('<IndexedFaceSet ')
-
-                        # --- Write IndexedFaceSet Attributes (same as IndexedTriangleSet)
-                        fw('solid="%s"\n' % bool_as_str(material and material.game_settings.use_backface_culling))
-                        if is_smooth:
-                            # use Auto-Smooth angle, if enabled. Otherwise make
-                            # the mesh perfectly smooth by creaseAngle > pi.
-                            fw('creaseAngle="%.4f"\n' % (mesh.auto_smooth_angle if mesh.use_auto_smooth else 4.0))
-
-                        if use_normals:
-                            # currently not optional, could be made so:
-                            fw('normalPerVertex="true"\n')
-
-                        # IndexedTriangleSet assumes true
-                        if is_col and not is_col_per_vertex:
-                            fw('colorPerVertex="false"\n')
-
-                        # for IndexedTriangleSet we use a uv per vertex so this isnt needed.
-                        if is_uv:
-                            fw('texCoordIndex="')
-
-                            j = 0
-                            for i in face_group:
-                                if len(mesh_faces_vertices[i]) == 4:
-                                    fw('%d %d %d %d -1 ' % (j, j + 1, j + 2, j + 3))
-                                    j += 4
-                                else:
-                                    fw('%d %d %d -1 ' % (j, j + 1, j + 2))
-                                    j += 3
-                            fw('"\n')
-                            # --- end texCoordIndex
-
-                        if True:
-                            fw('coordIndex="')
-                            for i in face_group:
-                                fv = mesh_faces_vertices[i]
-                                if len(fv) == 3:
-                                    fw('%i %i %i -1 ' % fv)
-                                else:
-                                    fw('%i %i %i %i -1 ' % fv)
-
-                            fw('"\n')
-                            # --- end coordIndex
-
-                        # close IndexedFaceSet
-                        fw('>\n')
-
-                        # --- Write IndexedFaceSet Elements
-                        if True:
-                            if is_coords_written:
-                                fw('<Coordinate USE=%s />\n' % (mesh_id_coords))
-                                if use_normals:
-                                    fw('<Normal USE=%s />\n' % (mesh_id_normals))
-                            else:
-                                fw('<Coordinate ')
-                                fw('DEF=%s\n' % mesh_id_coords)
-                                fw('point="')
-                                for v in mesh.vertices:
-                                    fw('%.6f %.6f %.6f ' % v.co[:])
-                                fw('"\n')
-                                fw('/>\n')
-
-                                is_coords_written = True
-
-                                if use_normals:
-                                    fw('<Normal ')
-                                    fw('DEF=%s\n' % mesh_id_normals)
-                                    fw('vector="')
-                                    for v in mesh.vertices:
-                                        fw('%.6f %.6f %.6f ' % v.normal[:])
-                                    fw('"\n')
-                                    fw('/>\n')
-
-                        if is_uv:
-                            fw('<TextureCoordinate point="')
-                            for i in face_group:
-                                for uv in mesh_faces_uv[i].uv:
-                                    fw('%.4f %.4f ' % uv[:])
-                            del mesh_faces_uv
-                            fw('" />\n')
-
-                        if is_col:
-                            # Need better logic here, dynamic determination
-                            # which of the X3D coloring models fits better this mesh - per face
-                            # or per vertex. Probably with an explicit fallback mode parameter.
-                            fw('<Color color="')
-                            if is_col_per_vertex:
-                                for i in range(len(mesh.vertices)):
-                                    # may be None,
-                                    fw('%.3f %.3f %.3f ' % (vert_color[i] or (0.0, 0.0, 0.0)))
-                            else:  # Export as colors per face.
-                                # TODO: average them rather than using the first one!
-                                for i in face_group:
-                                    fw('%.3f %.3f %.3f ' % mesh_faces_col[i].color1[:])
-                            fw('" />\n')
-
-                        # --- output vertexColors
-
-                        # --- output closing braces
-                        fw('</IndexedFaceSet>\n')
-                    fw('</Shape>\n')
-            fw('</Group>\n')
+                    # --- output closing braces
+                    fw('}\n')  # --- IndexedFaceSet
+                    fw('}\n')  # --- Shape
+            fw(']\n')  # --- Group
+            fw('}\n')  # --- Group
         writeTransform_end()
 
     def writeMaterial(material, world):
-        material_id = quoteattr(unique_name(material, MA_ + material.name, uuid_cache_material, clean_func=clean_def, sep="_"))
+        material_id = unique_name(material, MA_ + material.name, uuid_cache_material, clean_func=clean_def, sep="_")
 
         # look up material name, use it if available
         if material.tag:
-            fw('<Material USE=%s />\n' % (material_id))
+            fw('material USE %s\n' % (material_id))
         else:
             material.tag = True
 
@@ -749,26 +490,28 @@ def export(file,
                 shininess = 0.0
                 specColor = emitColor = diffuseColor
 
-            fw('<Material ')
-            fw('DEF=%s\n' % material_id)
-            fw('diffuseColor="%.3f %.3f %.3f"\n' % clight_color(diffuseColor))
-            fw('specularColor="%.3f %.3f %.3f"\n' % clight_color(specColor))
-            fw('emissiveColor="%.3f %.3f %.3f"\n' % clight_color(emitColor))
-            fw('ambientIntensity="%.3f"\n' % ambient)
-            fw('shininess="%.3f"\n' % shininess)
-            fw('transparency="%s"\n' % transp)
-            fw('/>\n')
+            fw('material ')
+            fw('DEF %s ' % material_id)
+            fw('Material {\n')
+            fw('diffuseColor %.3f %.3f %.3f\n' % clight_color(diffuseColor))
+            fw('specularColor %.3f %.3f %.3f\n' % clight_color(specColor))
+            fw('emissiveColor %.3f %.3f %.3f\n' % clight_color(emitColor))
+            fw('ambientIntensity %.3f\n' % ambient)
+            fw('shininess %.3f\n' % shininess)
+            fw('transparency %s\n' % transp)
+            fw('}\n')
 
     def writeImageTexture(image):
-        image_id = quoteattr(unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_"))
+        image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_")
 
         if image.tag:
-            fw('<ImageTexture USE=%s />\n' % (image_id))
+            fw('texture USE=%s\n' % (image_id))
         else:
             image.tag = True
 
-            fw('<ImageTexture ')
-            fw('DEF=%s\n' % image_id)
+            fw('texture ')
+            fw('DEF %s ' % image_id)
+            fw('ImageTexture {\n')
 
             # collect image paths, can load multiple
             # [relative, name-only, absolute]
@@ -787,8 +530,8 @@ def export(file,
             images = [f.replace('\\', '/') for f in images]
             images = [f for i, f in enumerate(images) if f not in images[:i]]
 
-            fw("url='%s'\n" % ' '.join(['"%s"' % escape(f) for f in images]))
-            fw('/>\n')
+            fw('url [ "%s" ]\n' % ' '.join(['"%s"' % escape(f) for f in images]))
+            fw('}\n')
 
     # -------------------------------------------------------------------------
     # Export Object Hierarchy (recursively called)
@@ -806,7 +549,7 @@ def export(file,
                 obj_main_matrix = obj_main_matrix_world
             obj_main_matrix_world_invert = obj_main_matrix_world.inverted(matrix_fallback)
 
-            obj_main_id = quoteattr(unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_"))
+            obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
 
             writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_quoted_str(obj_main_id, _TRANSFORM))
 
@@ -851,17 +594,6 @@ def export(file,
                     if do_remove:
                         bpy.data.meshes.remove(me)
 
-            elif obj_type == 'LIGHT':
-                data = obj.data
-                datatype = data.type
-                if datatype == 'POINT':
-                    writePointLight(obj, obj_matrix, data, world)
-                elif datatype == 'SPOT':
-                    writeSpotLight(obj, obj_matrix, data, world)
-                elif datatype == 'SUN':
-                    writeDirectionalLight(obj, obj_matrix, data, world)
-                else:
-                    writeDirectionalLight(obj, obj_matrix, data, world)
             else:
                 # print('Info: Ignoring [%s], object type [%s] not handle yet' % (object.name,object.getType))
                 pass
@@ -926,8 +658,6 @@ def export(file,
 def save(context, filepath, *,
          use_selection=True,
          use_mesh_modifiers=False,
-         use_triangulate=False,
-         use_normals=False,
          use_hierarchy=True,
          global_matrix=None,
          path_mode='AUTO',
@@ -949,8 +679,6 @@ def save(context, filepath, *,
         context.scene,
         use_mesh_modifiers=use_mesh_modifiers,
         use_selection=use_selection,
-        use_triangulate=use_triangulate,
-        use_normals=use_normals,
         use_hierarchy=use_hierarchy,
         path_mode=path_mode,
         name_decorations=name_decorations
