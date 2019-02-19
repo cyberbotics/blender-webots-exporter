@@ -2,6 +2,10 @@
 
 Blender add-on to export Webots files.
 
+## Requirements
+
+Tested on macOS and Linux for Blender 2.79.
+
 ## Installation and Update
 
 Let say `$BLENDER_ADD_ON_PATH` is the Blender add-on user directory:

@@ -23,10 +23,10 @@
 bl_info = {
     "name": "Webots format",
     "author": "Fabien Rohrer, Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev",
-    "version": (0, 1, 0),
+    "version": (1, 2, 0),
     "blender": (2, 79, 0),
     "location": "File > Import-Export",
-    "description": "Export to Webots",
+    "description": "Export Webots",
     "warning": "",
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Web3D",
     "support": 'TESTING',
@@ -48,60 +48,62 @@ from bpy.props import (
 from bpy_extras.io_utils import (
         ImportHelper,
         ExportHelper,
-        orientation_helper,
+        orientation_helper_factory,
         axis_conversion,
         path_reference_mode,
         )
 
 
-@orientation_helper(axis_forward='Z', axis_up='Y')
-class ExportWebots(bpy.types.Operator, ExportHelper):
-    """Export selection to Webpts file (.wbt)"""
-    bl_idname = "export_scene.wbt"
+IOX3DOrientationHelper = orientation_helper_factory("IOX3DOrientationHelper", axis_forward='Z', axis_up='Y')
+
+
+class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
+    """Export selection to Webots file (.wbt)"""
+    bl_idname = "scene.wbt"
     bl_label = 'Export Webots'
     bl_options = {'PRESET'}
 
-    filename_ext = ".x3d"
-    filter_glob: StringProperty(default="*.wbt", options={'HIDDEN'})
+    filename_ext = ".wbt"
+    filter_glob = StringProperty(default="*.wbt", options={'HIDDEN'})
 
-    use_selection: BoolProperty(
+    use_selection = BoolProperty(
             name="Selection Only",
             description="Export selected objects only",
             default=False,
             )
-    use_mesh_modifiers: BoolProperty(
+    use_mesh_modifiers = BoolProperty(
             name="Apply Modifiers",
             description="Use transformed mesh data from each object",
             default=True,
             )
-    use_triangulate: BoolProperty(
+    use_triangulate = BoolProperty(
             name="Triangulate",
             description="Write quads into 'IndexedTriangleSet'",
             default=False,
             )
-    use_normals: BoolProperty(
+    use_normals = BoolProperty(
             name="Normals",
             description="Write normals with geometry",
             default=False,
             )
-    use_hierarchy: BoolProperty(
+    use_hierarchy = BoolProperty(
             name="Hierarchy",
             description="Export parent child relationships",
             default=True,
             )
-    name_decorations: BoolProperty(
+    name_decorations = BoolProperty(
             name="Name decorations",
             description=("Add prefixes to the names of exported nodes to "
                          "indicate their type"),
             default=True,
             )
-    use_h3d: BoolProperty(
+    use_h3d = BoolProperty(
             name="H3D Extensions",
             description="Export shaders for H3D",
             default=False,
             )
 
-    global_scale: FloatProperty(
+    global_scale = FloatProperty(
             name="Scale",
             min=0.01, max=1000.0,
             default=1.0,
@@ -135,13 +137,17 @@ def menu_func_export(self, context):
 
 def register():
     bpy.utils.register_module(__name__)
-    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+
+    bpy.types.INFO_MT_file_export.append(menu_func_export)
 
 
 def unregister():
     bpy.utils.unregister_module(__name__)
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
+    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+
+# NOTES
+# - blender version is hardcoded
 
 if __name__ == "__main__":
     register()
