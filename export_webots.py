@@ -360,35 +360,22 @@ def export(file,
                     if image:
                         writeImageTexture(image)
 
-                        if mesh_materials_use_face_texture[material_index]:
-                            if image.use_tiles:
-                                fw('textureTransform TextureTransform { scale="%s %s" }\n' % (image.tiles_x, image.tiles_y))
-                        else:
-                            # transform by mtex
-                            loc = mesh_material_mtex[material_index].offset[:2]
-
-                            # mtex_scale * tex_repeat
-                            sca_x, sca_y = mesh_material_mtex[material_index].scale[:2]
-
-                            sca_x *= mesh_material_tex[material_index].repeat_x
-                            sca_y *= mesh_material_tex[material_index].repeat_y
-
-                            # flip x/y is a sampling feature, convert to transform
-                            if mesh_material_tex[material_index].use_flip_axis:
-                                rot = math.pi / -2.0
-                                sca_x, sca_y = sca_y, -sca_x
-                            else:
-                                rot = 0.0
-
-                            fw('textureTransform TextureTransform {\n')
-                            # fw('center="%.6f %.6f" ' % (0.0, 0.0))
-                            fw('translation %.6f %.6f\n' % loc)
-                            fw('scale %.6f %.6f\n' % (sca_x, sca_y))
-                            fw('rotation %.6f\n' % rot)
-                            fw('}\n')
-
                     if material:
-                        writeMaterial(material, world)
+                        emit = material.emit
+                        diffuseColor = material.diffuse_color[:]
+                        if world:
+                            ambiColor = ((material.ambient * 2.0) * world.ambient_color)[:]
+                        else:
+                            ambiColor = 0.0, 0.0, 0.0
+
+                        emitColor = tuple(((c * emit) + ambiColor[i]) / 2.0 for i, c in enumerate(diffuseColor))
+                        transp = material.alpha
+
+                        fw('baseColor %.3f %.3f %.3f\n' % clight_color(diffuseColor))
+                        fw('emissiveColor %.3f %.3f %.3f\n' % clight_color(emitColor))
+                        fw('metalness 0\n')
+                        fw('roughness 0.5\n')
+                        fw('transparency %s\n' % transp)
 
                     fw('}\n')  # -- PBRAppearance
 
@@ -462,44 +449,6 @@ def export(file,
             fw(']\n')  # --- Group
             fw('}\n')  # --- Group
         writeTransform_end()
-
-    def writeMaterial(material, world):
-        material_id = unique_name(material, MA_ + material.name, uuid_cache_material, clean_func=clean_def, sep="_")
-
-        # look up material name, use it if available
-        if material.tag:
-            fw('material USE %s\n' % (material_id))
-        else:
-            material.tag = True
-
-            emit = material.emit
-            ambient = material.ambient / 3.0
-            diffuseColor = material.diffuse_color[:]
-            if world:
-                ambiColor = ((material.ambient * 2.0) * world.ambient_color)[:]
-            else:
-                ambiColor = 0.0, 0.0, 0.0
-
-            emitColor = tuple(((c * emit) + ambiColor[i]) / 2.0 for i, c in enumerate(diffuseColor))
-            shininess = material.specular_hardness / 512.0
-            specColor = tuple((c + 0.001) / (1.25 / (material.specular_intensity + 0.001)) for c in material.specular_color)
-            transp = 1.0 - material.alpha
-
-            if material.use_shadeless:
-                ambient = 1.0
-                shininess = 0.0
-                specColor = emitColor = diffuseColor
-
-            fw('material ')
-            fw('DEF %s ' % material_id)
-            fw('Material {\n')
-            fw('diffuseColor %.3f %.3f %.3f\n' % clight_color(diffuseColor))
-            fw('specularColor %.3f %.3f %.3f\n' % clight_color(specColor))
-            fw('emissiveColor %.3f %.3f %.3f\n' % clight_color(emitColor))
-            fw('ambientIntensity %.3f\n' % ambient)
-            fw('shininess %.3f\n' % shininess)
-            fw('transparency %s\n' % transp)
-            fw('}\n')
 
     def writeImageTexture(image):
         image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_")
