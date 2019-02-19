@@ -13,3 +13,5 @@ mkdir -p $BLENDER_ADD_ON_PATH/export_webots
 cp __init__.py "$BLENDER_ADD_ON_PATH/export_webots"
 cp export_webots.py "$BLENDER_ADD_ON_PATH/export_webots"
 ```
+
+Enable the "Webots exporter" add-on in `Blender / Preferences / Add-ons / Testing`.
