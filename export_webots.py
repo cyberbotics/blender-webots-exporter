@@ -221,6 +221,7 @@ def export(file,
     def writeHeader():
         fw('#VRML_SIM R2019a utf8\n')
         fw('WorldInfo {\n')
+        fw('  basicTimeStep 8\n')
         fw('}\n')
         fw('Viewpoint {\n')
         fw('orientation -0.5 -0.852 -0.159 0.71\n')
@@ -264,7 +265,7 @@ def export(file,
             if 'motorName' in node_data:
                 fw('RotationalMotor {\n')
                 fw('name "%s"\n' % node_data['motorName'])
-                fw('maxTorque 10000\n')
+                fw('maxTorque 100000\n')
                 fw('}\n')
             if 'positionSensorName' in node_data:
                 fw('PositionSensor {\n')
