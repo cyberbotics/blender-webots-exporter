@@ -74,15 +74,15 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         description="Use transformed mesh data from each object",
         default=True,
     )
-    use_hierarchy = BoolProperty(
-        name="Hierarchy",
-        description="Export parent child relationships",
-        default=True,
+    user_data_path = StringProperty(
+        name="User data path",
+        description="File path targeting the JSON file containing user custom data.",
+        subtype='FILE_PATH',
+        default='/Users/fabien/repos/flash/models/irb4600-40/irb4600-40.json'  # TODO: how to add a good default value here?
     )
     name_decorations = BoolProperty(
         name="Name decorations",
-        description=("Add prefixes to the names of exported nodes to "
-                     "indicate their type"),
+        description=("Add prefixes to the names of exported nodes to indicate their type"),
         default=True,
     )
     global_scale = FloatProperty(
@@ -98,8 +98,7 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         from mathutils import Matrix
 
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "global_scale", "check_existing", "filter_glob"))
-        global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4() * \
-            Matrix.Scale(self.global_scale, 4)
+        global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4() * Matrix.Scale(self.global_scale, 4)
         keywords["global_matrix"] = global_matrix
 
         return export_webots.save(context, **keywords)

@@ -32,7 +32,7 @@ Known issues:
     Can't get the texture array associated with material * not the UV ones;
 """
 
-import math
+import json
 import os
 
 import bpy
@@ -148,7 +148,7 @@ def export(file,
            scene,
            use_mesh_modifiers=False,
            use_selection=True,
-           use_hierarchy=True,
+           user_data={},
            path_mode='AUTO',
            name_decorations=True,
            ):
@@ -179,7 +179,7 @@ def export(file,
         WO_ = 'WO_'
         MA_ = 'MA_'
         LA_ = 'LA_'
-        group_ = 'group_'
+        group_ = 'GROUP_'
     else:
         # If names are not decorated, it may be possible for two objects to
         # have the same name, so there has to be a unified dictionary to
@@ -237,26 +237,55 @@ def export(file,
     def writeTransform_begin(matrix, def_id):
         if def_id is not None:
             fw('DEF %s ' % def_id)
-        fw('Transform {\n')
 
         loc, rot, sca = matrix.decompose()
         rot = rot.to_axis_angle()
         rot = (*rot[0], rot[1])
+
+        hingeJoint = False
+        if def_id in user_data:
+            node_data = user_data[def_id]
+            fw('%s {\n' % node_data['webotsType'])
+            hingeJoint = node_data['webotsType'] == 'HingeJoint'
+        else:
+            fw('Transform {\n')
+
+        if hingeJoint:
+            node_data = user_data[def_id]
+            fw('jointParameters HingeJointParameters {\n')
+            fw('anchor %.6f %.6f %.6f\n' % loc[:])
+            fw('axis %s\n' % node_data['hingeJointParameters']['axis'])
+            fw('}\n')
+            fw('device [\n')
+            if 'motorName' in node_data:
+                fw('RotationalMotor {\n')
+                fw('name "%s"\n' % node_data['motorName'])
+                fw('}\n')
+            if 'positionSensorName' in node_data:
+                fw('PositionSensor {\n')
+                fw('name "%s"\n' % node_data['positionSensorName'])
+                fw('}\n')
+            fw(']\n')
+            fw('endPoint Solid {\n')
 
         fw('translation %.6f %.6f %.6f\n' % loc[:])
         fw('scale %.6f %.6f %.6f\n' % sca[:])
         fw('rotation %.6f %.6f %.6f %.6f\n' % rot)
         fw('children [\n')
 
-    def writeTransform_end():
+        return hingeJoint
+
+    def writeTransform_end(supplementaryCurvyBracket):
         fw(']\n')
         fw('}\n')
+        if supplementaryCurvyBracket:
+            fw('}\n')
 
     def writeIndexedFaceSet(obj, mesh, matrix, world):
         obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=clean_def, sep="_")
         mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=clean_def, sep="_")
         mesh_id_group = prefix_string(mesh_id, group_)
-        mesh_id_coords = prefix_string(mesh_id, 'coords_')
+        mesh_id_coords = prefix_string(mesh_id, 'COORDS_')
 
         # tessellation faces may not exist
         if not mesh.tessfaces and mesh.polygons:
@@ -267,7 +296,7 @@ def export(file,
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when
         # hierarchys are used.
-        writeTransform_begin(matrix, suffix_string(obj_id, "_ifs" + _TRANSFORM))
+        supplementaryCurvyBracket = writeTransform_begin(matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
 
         if mesh.tag:
             fw('USE %s {}}\n' % (mesh_id_group))
@@ -448,7 +477,7 @@ def export(file,
                     fw('}\n')  # --- Shape
             fw(']\n')  # --- Group
             fw('}\n')  # --- Group
-        writeTransform_end()
+        writeTransform_end(supplementaryCurvyBracket)
 
     def writeImageTexture(image):
         image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_")
@@ -490,26 +519,22 @@ def export(file,
         world = scene.world
         free, derived = create_derived_objects(scene, obj_main)
 
-        if use_hierarchy:
-            obj_main_matrix_world = obj_main.matrix_world
-            if obj_main_parent:
-                obj_main_matrix = obj_main_parent.matrix_world.inverted(matrix_fallback) * obj_main_matrix_world
-            else:
-                obj_main_matrix = obj_main_matrix_world
-            obj_main_matrix_world_invert = obj_main_matrix_world.inverted(matrix_fallback)
+        obj_main_matrix_world = obj_main.matrix_world
+        if obj_main_parent:
+            obj_main_matrix = obj_main_parent.matrix_world.inverted(matrix_fallback) * obj_main_matrix_world
+        else:
+            obj_main_matrix = obj_main_matrix_world
+        obj_main_matrix_world_invert = obj_main_matrix_world.inverted(matrix_fallback)
 
-            obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
+        obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
 
-            writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
+        supplementaryCurvyBracket = writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
 
-            if use_hierarchy:
-                # make transform node relative
-                obj_matrix = obj_main_matrix_world_invert * obj_matrix
-            else:
-                obj_matrix = global_matrix * obj_matrix
+            # make transform node relative
+            obj_matrix = obj_main_matrix_world_invert * obj_matrix
 
             if obj_type in {'MESH', 'CURVE', 'SURFACE', 'FONT'}:
                 if (obj_type != 'MESH') or (use_mesh_modifiers and obj.is_modified(scene, 'PREVIEW')):
@@ -556,8 +581,7 @@ def export(file,
         for obj_child, obj_child_children in obj_children:
             export_object(obj_main, obj_child, obj_child_children)
 
-        if use_hierarchy:
-            writeTransform_end()
+        writeTransform_end(supplementaryCurvyBracket)
 
     # -------------------------------------------------------------------------
     # Main Export Function
@@ -576,10 +600,7 @@ def export(file,
         print('Info: starting Webots export to %r...' % file.name)
         writeHeader()
 
-        if use_hierarchy:
-            objects_hierarchy = build_hierarchy(objects)
-        else:
-            objects_hierarchy = ((obj, []) for obj in objects)
+        objects_hierarchy = build_hierarchy(objects)
 
         for obj_main, obj_main_children in objects_hierarchy:
             export_object(None, obj_main, obj_main_children)
@@ -607,7 +628,7 @@ def export(file,
 def save(context, filepath, *,
          use_selection=True,
          use_mesh_modifiers=False,
-         use_hierarchy=True,
+         user_data_path='',
          global_matrix=None,
          path_mode='AUTO',
          name_decorations=True):
@@ -622,13 +643,18 @@ def save(context, filepath, *,
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
 
+    user_data = {}
+    if user_data_path and os.path.isfile(user_data_path):
+        with open(user_data_path) as f:
+            user_data = json.load(f)
+
     export(
         file,
         global_matrix,
         context.scene,
         use_mesh_modifiers=use_mesh_modifiers,
         use_selection=use_selection,
-        use_hierarchy=use_hierarchy,
+        user_data=user_data,
         path_mode=path_mode,
         name_decorations=name_decorations
     )
