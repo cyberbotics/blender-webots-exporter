@@ -23,7 +23,7 @@
 bl_info = {
     "name": "Webots format",
     "author": "Fabien Rohrer, Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev",
-    "version": (1, 2, 0),
+    "version": (0, 1, 0),
     "blender": (2, 79, 0),
     "location": "File > Import-Export",
     "description": "Export Webots",

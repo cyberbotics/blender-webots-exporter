@@ -234,7 +234,7 @@ def export(file,
     def writeFooter():
         pass
 
-    def writeTransform_begin(matrix, def_id):
+    def writeTransform_begin(obj, matrix, def_id):
         if def_id is not None:
             fw('DEF %s ' % def_id)
 
@@ -243,10 +243,14 @@ def export(file,
         rot = (*rot[0], rot[1])
 
         hingeJoint = False
+        exportBoundingObject = False
+        exportPhysics = False
         if def_id in user_data:
             node_data = user_data[def_id]
             fw('%s {\n' % node_data['webotsType'])
             hingeJoint = node_data['webotsType'] == 'HingeJoint'
+            exportPhysics = node_data['webotsType'] != 'Robot'  # TODO: static root should be a parameter.
+            exportBoundingObject = True
         else:
             fw('Transform {\n')
 
@@ -260,6 +264,7 @@ def export(file,
             if 'motorName' in node_data:
                 fw('RotationalMotor {\n')
                 fw('name "%s"\n' % node_data['motorName'])
+                fw('maxTorque 10000\n')
                 fw('}\n')
             if 'positionSensorName' in node_data:
                 fw('PositionSensor {\n')
@@ -271,6 +276,23 @@ def export(file,
         fw('translation %.6f %.6f %.6f\n' % loc[:])
         fw('scale %.6f %.6f %.6f\n' % sca[:])
         fw('rotation %.6f %.6f %.6f %.6f\n' % rot)
+
+        if exportPhysics:
+            fw('physics Physics {\n')
+            fw('}\n')
+        if exportBoundingObject:
+            fw('boundingObject Transform {\n')
+            x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
+            y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
+            z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
+            fw('translation %.6f %.6f %.6f\n' % (x, y, z))
+            fw('children [\n')
+            fw('Box {\n')
+            fw('size %.6f %.6f %.6f\n' % obj.dimensions[:])
+            fw('}\n')
+            fw(']\n')
+            fw('}\n')
+
         fw('children [\n')
 
         return hingeJoint
@@ -296,7 +318,7 @@ def export(file,
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when
         # hierarchys are used.
-        supplementaryCurvyBracket = writeTransform_begin(matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
+        supplementaryCurvyBracket = writeTransform_begin(obj, matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
 
         if mesh.tag:
             fw('USE %s {}}\n' % (mesh_id_group))
@@ -528,7 +550,7 @@ def export(file,
 
         obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
 
-        supplementaryCurvyBracket = writeTransform_begin(obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
+        supplementaryCurvyBracket = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
