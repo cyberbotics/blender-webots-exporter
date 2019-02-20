@@ -119,6 +119,10 @@ def clean_def(txt):
     })
 
 
+def nearly_equal(a, b, sig_fig=5):
+    return a == b or int(a * 10 ** sig_fig) == int(b * 10 ** sig_fig)
+
+
 def build_hierarchy(objects):
     """ Returns parent child relationships, skipping. """
     objects_set = set(objects)
@@ -166,19 +170,11 @@ def export(file,
         # since objects of different types will always have
         # different decorated names.
         uuid_cache_object = {}    # object
-        uuid_cache_light = {}      # 'LA_' + object.name
-        uuid_cache_view = {}      # object, different namespace
         uuid_cache_mesh = {}      # mesh
-        uuid_cache_material = {}  # material
         uuid_cache_image = {}     # image
-        uuid_cache_world = {}     # world
-        CA_ = 'CA_'
         OB_ = 'OB_'
         ME_ = 'ME_'
         IM_ = 'IM_'
-        WO_ = 'WO_'
-        MA_ = 'MA_'
-        LA_ = 'LA_'
         group_ = 'GROUP_'
     else:
         # If names are not decorated, it may be possible for two objects to
@@ -186,20 +182,12 @@ def export(file,
         # prevent uuid collisions.
         uuid_cache = {}
         uuid_cache_object = uuid_cache           # object
-        uuid_cache_light = uuid_cache             # 'LA_' + object.name
-        uuid_cache_view = uuid_cache             # object, different namespace
         uuid_cache_mesh = uuid_cache             # mesh
-        uuid_cache_material = uuid_cache         # material
         uuid_cache_image = uuid_cache            # image
-        uuid_cache_world = uuid_cache            # world
         del uuid_cache
-        CA_ = ''
         OB_ = ''
         ME_ = ''
         IM_ = ''
-        WO_ = ''
-        MA_ = ''
-        LA_ = ''
         group_ = ''
 
     _TRANSFORM = '_TRANSFORM'
@@ -236,9 +224,6 @@ def export(file,
         pass
 
     def writeTransform_begin(obj, matrix, def_id):
-        if def_id is not None:
-            fw('DEF %s ' % def_id)
-
         loc, rot, sca = matrix.decompose()
         rot = rot.to_axis_angle()
         rot = (*rot[0], rot[1])
@@ -247,12 +232,18 @@ def export(file,
         exportBoundingObject = False
         exportPhysics = False
         if def_id in user_data:
+            fw('DEF %s ' % def_id)
             node_data = user_data[def_id]
             fw('%s {\n' % node_data['webotsType'])
             hingeJoint = node_data['webotsType'] == 'HingeJoint'
             exportPhysics = node_data['webotsType'] != 'Robot'  # TODO: static root should be a parameter.
             exportBoundingObject = True
+        elif nearly_equal(loc[0], 0.0) and nearly_equal(loc[1], 0.0) and nearly_equal(loc[2], 0.0) and nearly_equal(rot[3], 0.0) and \
+                nearly_equal(sca[0], 1.0) and nearly_equal(sca[1], 1.0) and nearly_equal(sca[2], 1.0):
+            return (True, False)  # Skipped useless transform.
         else:
+            if def_id is not None:
+                fw('DEF %s ' % def_id)
             fw('Transform {\n')
 
         if hingeJoint:
@@ -296,7 +287,7 @@ def export(file,
 
         fw('children [\n')
 
-        return hingeJoint
+        return (False, hingeJoint)
 
     def writeTransform_end(supplementaryCurvyBracket):
         fw(']\n')
@@ -319,15 +310,12 @@ def export(file,
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when
         # hierarchys are used.
-        supplementaryCurvyBracket = writeTransform_begin(obj, matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
+        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
 
         if mesh.tag:
             fw('USE %s {}}\n' % (mesh_id_group))
         else:
             mesh.tag = True
-
-            fw('DEF %s Group {\n' % (mesh_id_group))
-            fw('children [\n')
 
             is_uv = bool(mesh.tessface_uv_textures.active)
             is_coords_written = False
@@ -486,21 +474,22 @@ def export(file,
                             is_coords_written = True
 
                     if is_uv:
-                        fw('texCoord TextureCoordinate [')
+                        fw('texCoord TextureCoordinate {\n')
+                        fw('point [\n')
                         for i in face_group:
                             for uv in mesh_faces_uv[i].uv:
                                 fw('%.4f %.4f ' % uv[:])
                         del mesh_faces_uv
                         fw(']\n')
+                        fw('}\n')
 
                     # --- output vertexColors
 
                     # --- output closing braces
                     fw('}\n')  # --- IndexedFaceSet
                     fw('}\n')  # --- Shape
-            fw(']\n')  # --- Group
-            fw('}\n')  # --- Group
-        writeTransform_end(supplementaryCurvyBracket)
+        if not skipUselessTransform:
+            writeTransform_end(supplementaryCurvyBracket)
 
     def writeImageTexture(image):
         image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_")
@@ -551,7 +540,7 @@ def export(file,
 
         obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
 
-        supplementaryCurvyBracket = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
+        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
@@ -604,7 +593,8 @@ def export(file,
         for obj_child, obj_child_children in obj_children:
             export_object(obj_main, obj_child, obj_child_children)
 
-        writeTransform_end(supplementaryCurvyBracket)
+        if not skipUselessTransform:
+            writeTransform_end(supplementaryCurvyBracket)
 
     # -------------------------------------------------------------------------
     # Main Export Function
