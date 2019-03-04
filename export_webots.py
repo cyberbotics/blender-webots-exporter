@@ -198,9 +198,21 @@ def export(file,
     # store names of newly cerated meshes, so we dont overlap
     mesh_name_set = set()
 
-    fw = file.write
     base_src = os.path.dirname(bpy.data.filepath)
     base_dst = os.path.dirname(file.name)
+
+    def fw(line):
+        strippedLine = line.strip()
+        if strippedLine.startswith('}') or strippedLine.startswith(']'):
+            fw.indentation -= 1
+        if fw.isLastCharacterACariageReturn:
+            file.write('  ' * fw.indentation)
+        file.write(line)
+        fw.isLastCharacterACariageReturn = line.endswith('\n')
+        if strippedLine.endswith('{') or strippedLine.endswith('['):
+            fw.indentation += 1
+    fw.indentation = 0
+    fw.isLastCharacterACariageReturn = False
 
     # -------------------------------------------------------------------------
     # File Writing Functions
@@ -409,13 +421,11 @@ def export(file,
                             ambiColor = 0.0, 0.0, 0.0
 
                         emitColor = tuple(((c * emit) + ambiColor[i]) / 2.0 for i, c in enumerate(diffuseColor))
-                        transp = material.alpha
 
                         fw('baseColor %.3f %.3f %.3f\n' % clight_color(diffuseColor))
                         fw('emissiveColor %.3f %.3f %.3f\n' % clight_color(emitColor))
                         fw('metalness 0\n')
                         fw('roughness 0.5\n')
-                        fw('transparency %s\n' % transp)
 
                     fw('}\n')  # -- PBRAppearance
 
@@ -424,7 +434,6 @@ def export(file,
                     fw('geometry IndexedFaceSet {\n')
 
                     # --- Write IndexedFaceSet Attributes (same as IndexedTriangleSet)
-                    fw('solid %s\n' % bool_as_str(material and material.game_settings.use_backface_culling))
                     if is_smooth:
                         # use Auto-Smooth angle, if enabled. Otherwise make
                         # the mesh perfectly smooth by creaseAngle > pi.
@@ -442,18 +451,19 @@ def export(file,
                             else:
                                 fw('%d %d %d -1 ' % (j, j + 1, j + 2))
                                 j += 3
+                        fw('\n')
                         fw(']\n')
                         # --- end texCoordIndex
 
                     if True:
-                        fw('coordIndex [')
+                        fw('coordIndex [\n')
                         for i in face_group:
                             fv = mesh_faces_vertices[i]
                             if len(fv) == 3:
                                 fw('%i %i %i -1 ' % fv)
                             else:
                                 fw('%i %i %i %i -1 ' % fv)
-
+                        fw('\n')
                         fw(']\n')
                         # --- end coordIndex
 
@@ -465,9 +475,10 @@ def export(file,
                             fw('coord ')
                             fw('DEF %s ' % mesh_id_coords)
                             fw('Coordinate {\n')
-                            fw('point [')
+                            fw('point [\n')
                             for v in mesh.vertices:
                                 fw('%.6f %.6f %.6f ' % v.co[:])
+                            fw('\n')
                             fw(']\n')
                             fw('}\n')
 
@@ -480,6 +491,7 @@ def export(file,
                             for uv in mesh_faces_uv[i].uv:
                                 fw('%.4f %.4f ' % uv[:])
                         del mesh_faces_uv
+                        fw('\n')
                         fw(']\n')
                         fw('}\n')
 
