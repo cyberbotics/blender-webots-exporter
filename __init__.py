@@ -80,11 +80,6 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         subtype='FILE_PATH',
         default='/Users/fabien/repos/flash/models/irb4600-40/irb4600-40.json'  # TODO: how to add a good default value here?
     )
-    name_decorations = BoolProperty(
-        name="Name decorations",
-        description=("Add prefixes to the names of exported nodes to indicate their type"),
-        default=True,
-    )
     global_scale = FloatProperty(
         name="Scale",
         min=0.01, max=1000.0,

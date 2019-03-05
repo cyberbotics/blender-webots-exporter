@@ -34,6 +34,7 @@ Known issues:
 
 import json
 import os
+import re
 
 import bpy
 import mathutils
@@ -61,62 +62,20 @@ def bool_as_str(value):
     return ('FALSE', 'TRUE')[bool(value)]
 
 
-def clean_def(txt):
-    # see report [#28256]
-    if not txt:
-        txt = "None"
-    # no digit start
-    if txt[0] in "1234567890+-":
-        txt = "_" + txt
-    return txt.translate({
-        # control characters 0x0-0x1f
-        # 0x00: "_",
-        0x01: "_",
-        0x02: "_",
-        0x03: "_",
-        0x04: "_",
-        0x05: "_",
-        0x06: "_",
-        0x07: "_",
-        0x08: "_",
-        0x09: "_",
-        0x0a: "_",
-        0x0b: "_",
-        0x0c: "_",
-        0x0d: "_",
-        0x0e: "_",
-        0x0f: "_",
-        0x10: "_",
-        0x11: "_",
-        0x12: "_",
-        0x13: "_",
-        0x14: "_",
-        0x15: "_",
-        0x16: "_",
-        0x17: "_",
-        0x18: "_",
-        0x19: "_",
-        0x1a: "_",
-        0x1b: "_",
-        0x1c: "_",
-        0x1d: "_",
-        0x1e: "_",
-        0x1f: "_",
-
-        0x7f: "_",  # 127
-
-        0x20: "_",  # space
-        0x22: "_",  # "
-        0x27: "_",  # '
-        0x23: "_",  # #
-        0x2c: "_",  # ,
-        0x2e: "_",  # .
-        0x5b: "_",  # [
-        0x5d: "_",  # ]
-        0x5c: "_",  # \
-        0x7b: "_",  # {
-        0x7d: "_"  # }
-    })
+def slugify(s):
+    if not s:
+        s = 'none'
+    s = s.upper()
+    for k in range(len(s)):
+        if not re.match(r'[A-Z]', s[k]):
+            s = s[:k] + '_' + s[(k + 1):]
+    if not re.match(r'[A-Z]', s[0]):
+        s = '_' + s
+    while '__' in s:
+        s = s.replace('__', '_')
+    if s[-1] == '_':
+        s = s[:-1]
+    return s
 
 
 def nearly_equal(a, b, sig_fig=5):
@@ -153,8 +112,7 @@ def export(file,
            use_mesh_modifiers=False,
            use_selection=True,
            user_data={},
-           path_mode='AUTO',
-           name_decorations=True,
+           path_mode='AUTO'
            ):
 
     # -------------------------------------------------------------------------
@@ -164,32 +122,13 @@ def export(file,
     from bpy_extras.io_utils import unique_name
     from xml.sax.saxutils import escape
 
-    if name_decorations:
-        # If names are decorated, the uuid map can be split up
-        # by type for efficiency of collision testing
-        # since objects of different types will always have
-        # different decorated names.
-        uuid_cache_object = {}    # object
-        uuid_cache_mesh = {}      # mesh
-        uuid_cache_image = {}     # image
-        OB_ = 'OB_'
-        ME_ = 'ME_'
-        IM_ = 'IM_'
-        group_ = 'GROUP_'
-    else:
-        # If names are not decorated, it may be possible for two objects to
-        # have the same name, so there has to be a unified dictionary to
-        # prevent uuid collisions.
-        uuid_cache = {}
-        uuid_cache_object = uuid_cache           # object
-        uuid_cache_mesh = uuid_cache             # mesh
-        uuid_cache_image = uuid_cache            # image
-        del uuid_cache
-        OB_ = ''
-        ME_ = ''
-        IM_ = ''
-        group_ = ''
-
+    uuid_cache_object = {}    # object
+    uuid_cache_mesh = {}      # mesh
+    uuid_cache_image = {}     # image
+    OB_ = 'OB_'
+    ME_ = 'ME_'
+    IM_ = 'IM_'
+    GROUP_ = 'GROUP_'
     _TRANSFORM = '_TRANSFORM'
 
     # store files to copy
@@ -308,9 +247,9 @@ def export(file,
             fw('}\n')
 
     def writeIndexedFaceSet(obj, mesh, matrix, world):
-        obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=clean_def, sep="_")
-        mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=clean_def, sep="_")
-        mesh_id_group = prefix_string(mesh_id, group_)
+        obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=slugify, sep="_")
+        mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=slugify, sep="_")
+        mesh_id_group = prefix_string(mesh_id, GROUP_)
         mesh_id_coords = prefix_string(mesh_id, 'COORDS_')
 
         # tessellation faces may not exist
@@ -504,7 +443,7 @@ def export(file,
             writeTransform_end(supplementaryCurvyBracket)
 
     def writeImageTexture(image):
-        image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=clean_def, sep="_")
+        image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=slugify, sep="_")
 
         if image.tag:
             fw('texture USE=%s\n' % (image_id))
@@ -550,7 +489,7 @@ def export(file,
             obj_main_matrix = obj_main_matrix_world
         obj_main_matrix_world_invert = obj_main_matrix_world.inverted(matrix_fallback)
 
-        obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=clean_def, sep="_")
+        obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep="_")
 
         (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
@@ -655,8 +594,7 @@ def save(context, filepath, *,
          use_mesh_modifiers=False,
          user_data_path='',
          global_matrix=None,
-         path_mode='AUTO',
-         name_decorations=True):
+         path_mode='AUTO'):
 
     bpy.path.ensure_ext(filepath, '.wbt')
 
@@ -680,8 +618,7 @@ def save(context, filepath, *,
         use_mesh_modifiers=use_mesh_modifiers,
         use_selection=use_selection,
         user_data=user_data,
-        path_mode=path_mode,
-        name_decorations=name_decorations
+        path_mode=path_mode
     )
 
     return {'FINISHED'}
