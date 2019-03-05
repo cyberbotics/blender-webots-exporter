@@ -160,7 +160,7 @@ def export(file,
     def writeHeader():
         fw('#VRML_SIM R2019a utf8\n')
         fw('WorldInfo {\n')
-        fw('  basicTimeStep 8\n')
+        fw('basicTimeStep 8\n')
         fw('}\n')
         fw('Viewpoint {\n')
         fw('orientation -0.5 -0.852 -0.159 0.71\n')
