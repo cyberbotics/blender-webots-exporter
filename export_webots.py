@@ -300,10 +300,11 @@ def export(file,
             mesh_faces_vertices = [f.vertices[:] for f in mesh_faces]
 
             if is_uv and True in mesh_materials_use_face_texture:
-                mesh_faces_image = [(fuv.image
-                                     if mesh_materials_use_face_texture[mesh_faces_materials[i]]
-                                     else mesh_material_images[mesh_faces_materials[i]])
-                                     for i, fuv in enumerate(mesh.tessface_uv_textures.active.data)]
+                mesh_faces_image = [
+                    (fuv.image if mesh_materials_use_face_texture[mesh_faces_materials[i]]
+                        else mesh_material_images[mesh_faces_materials[i]])
+                    for i, fuv in enumerate(mesh.tessface_uv_textures.active.data)
+                ]
 
                 mesh_faces_image_unique = set(mesh_faces_image)
             elif len(set(mesh_material_images) | {None}) > 1:  # make sure there is at least one image
@@ -501,10 +502,7 @@ def export(file,
 
             if obj_type in {'MESH', 'CURVE', 'SURFACE', 'FONT'}:
                 if (obj_type != 'MESH') or (use_mesh_modifiers and obj.is_modified(scene, 'PREVIEW')):
-                    try:
-                        me = obj.to_mesh(scene, use_mesh_modifiers, 'PREVIEW')
-                    except:
-                        me = None
+                    me = obj.to_mesh(scene, use_mesh_modifiers, 'PREVIEW')
                     do_remove = True
                 else:
                     me = obj.data
