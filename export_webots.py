@@ -197,6 +197,8 @@ def export(file,
                 fw('}\n')
             fw(']\n')
             fw('endPoint Solid {\n')
+            if 'motorName' in node_data:
+                fw('name "%s"\n' % node_data['motorName'])
 
         fw('translation %.6f %.6f %.6f\n' % loc[:])
         fw('scale %.6f %.6f %.6f\n' % sca[:])
