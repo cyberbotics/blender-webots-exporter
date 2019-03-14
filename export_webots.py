@@ -410,7 +410,7 @@ def export(file,
                     # --- Write IndexedFaceSet Elements
                     if True:
                         if is_coords_written:
-                            fw('coord USE=%s\n' % (mesh_id_coords))
+                            fw('coord USE %s\n' % (mesh_id_coords))
                         else:
                             fw('coord ')
                             fw('DEF %s ' % mesh_id_coords)
@@ -447,7 +447,7 @@ def export(file,
         image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=slugify, sep="_")
 
         if image.tag:
-            fw('texture USE=%s\n' % (image_id))
+            fw('texture USE %s\n' % (image_id))
         else:
             image.tag = True
 
