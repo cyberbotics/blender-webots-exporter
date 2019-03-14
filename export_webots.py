@@ -246,7 +246,7 @@ def export(file,
         (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, suffix_string(obj_id, '_IFS' + _TRANSFORM))
 
         if mesh.tag:
-            fw('USE %s {}}\n' % (mesh_id_group))
+            fw('USE %s\n' % (mesh_id_group))
         else:
             mesh.tag = True
 
