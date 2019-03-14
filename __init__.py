@@ -78,7 +78,7 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         name='User data path',
         description='File path targeting the JSON file containing user custom data.',
         subtype='FILE_PATH',
-        default='/Users/fabien/repos/flash/models/irb4600-40/irb4600-40.json'  # TODO: how to add a good default value here?
+        default=bpy.data.filepath.replace('.blend', '.json')
     )
     global_scale = FloatProperty(
         name='Scale',
