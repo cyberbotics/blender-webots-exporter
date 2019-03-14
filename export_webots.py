@@ -83,7 +83,7 @@ def nearly_equal(a, b, sig_fig=5):
 
 
 def build_hierarchy(objects):
-    """ Returns parent child relationships, skipping. """
+    """Returns parent child relationships, skipping."""
     objects_set = set(objects)
     par_lookup = {}
 
@@ -247,8 +247,8 @@ def export(file,
             fw('}\n')
 
     def writeIndexedFaceSet(obj, mesh, matrix, world):
-        obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=slugify, sep="_")
-        mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=slugify, sep="_")
+        obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=slugify, sep='_')
+        mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=slugify, sep='_')
         mesh_id_group = prefix_string(mesh_id, GROUP_)
         mesh_id_coords = prefix_string(mesh_id, 'COORDS_')
 
@@ -261,7 +261,7 @@ def export(file,
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when
         # hierarchys are used.
-        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, suffix_string(obj_id, "_IFS" + _TRANSFORM))
+        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, suffix_string(obj_id, '_IFS' + _TRANSFORM))
 
         if mesh.tag:
             fw('USE %s {}}\n' % (mesh_id_group))
@@ -444,7 +444,7 @@ def export(file,
             writeTransform_end(supplementaryCurvyBracket)
 
     def writeImageTexture(image):
-        image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=slugify, sep="_")
+        image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=slugify, sep='_')
 
         if image.tag:
             fw('texture USE %s\n' % (image_id))
@@ -459,7 +459,7 @@ def export(file,
             # [relative, name-only, absolute]
             filepath = image.filepath
             filepath_full = bpy.path.abspath(filepath, library=image.library)
-            filepath_ref = bpy_extras.io_utils.path_reference(filepath_full, base_src, base_dst, path_mode, "textures", copy_set, image.library)
+            filepath_ref = bpy_extras.io_utils.path_reference(filepath_full, base_src, base_dst, path_mode, 'textures', copy_set, image.library)
             filepath_base = os.path.basename(filepath_full)
 
             images = [
@@ -490,7 +490,7 @@ def export(file,
             obj_main_matrix = obj_main_matrix_world
         obj_main_matrix_world_invert = obj_main_matrix_world.inverted(matrix_fallback)
 
-        obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep="_")
+        obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep='_')
 
         (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
 
@@ -512,11 +512,11 @@ def export(file,
                     # ensure unique name, we could also do this by
                     # postponing mesh removal, but clearing data - TODO
                     if do_remove:
-                        me.name = obj.name.rstrip("1234567890").rstrip(".")
+                        me.name = obj.name.rstrip('1234567890').rstrip('.')
                         me_name_new = me_name_org = me.name
                         count = 0
                         while me_name_new in mesh_name_set:
-                            me.name = "%.17s.%03d" % (me_name_org, count)
+                            me.name = '%.17s.%03d' % (me_name_org, count)
                             me_name_new = me.name
                             count += 1
                         mesh_name_set.add(me_name_new)

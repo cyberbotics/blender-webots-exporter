@@ -21,21 +21,21 @@
 # Inspired from https://github.com/sobotka/blender-addons/blob/master/io_scene_x3d/__init__.py
 
 bl_info = {
-    "name": "Webots format",
-    "author": "Fabien Rohrer, Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev",
-    "version": (0, 1, 0),
-    "blender": (2, 79, 0),
-    "location": "File > Import-Export",
-    "description": "Export Webots",
-    "warning": "",
-    "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Web3D",
-    "support": 'TESTING',
-    "category": "Import-Export",
+    'name': 'Webots format',
+    'author': 'Fabien Rohrer, Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev',
+    'version': (0, 1, 0),
+    'blender': (2, 79, 0),
+    'location': 'File > Import-Export',
+    'description': 'Export Webots',
+    'warning': '',
+    'wiki_url': 'http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Web3D',
+    'support': 'TESTING',
+    'category': 'Import-Export',
 }
 
-if "bpy" in locals():
+if 'bpy' in locals():
     import importlib
-    if "export_webots" in locals():
+    if 'export_webots' in locals():
         importlib.reload(export_webots)
 
 import bpy
@@ -52,36 +52,36 @@ from bpy_extras.io_utils import (
 )
 
 
-IOX3DOrientationHelper = orientation_helper_factory("IOX3DOrientationHelper", axis_forward='Z', axis_up='Y')
+IOX3DOrientationHelper = orientation_helper_factory('IOX3DOrientationHelper', axis_forward='Z', axis_up='Y')
 
 
 class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
     """Export selection to Webots file (.wbt)"""
-    bl_idname = "scene.wbt"
+    bl_idname = 'scene.wbt'
     bl_label = 'Export Webots'
     bl_options = {'PRESET'}
 
-    filename_ext = ".wbt"
-    filter_glob = StringProperty(default="*.wbt", options={'HIDDEN'})
+    filename_ext = '.wbt'
+    filter_glob = StringProperty(default='*.wbt', options={'HIDDEN'})
 
     use_selection = BoolProperty(
-        name="Selection Only",
-        description="Export selected objects only",
+        name='Selection Only',
+        description='Export selected objects only',
         default=False,
     )
     use_mesh_modifiers = BoolProperty(
-        name="Apply Modifiers",
-        description="Use transformed mesh data from each object",
+        name='Apply Modifiers',
+        description='Use transformed mesh data from each object',
         default=True,
     )
     user_data_path = StringProperty(
-        name="User data path",
-        description="File path targeting the JSON file containing user custom data.",
+        name='User data path',
+        description='File path targeting the JSON file containing user custom data.',
         subtype='FILE_PATH',
         default='/Users/fabien/repos/flash/models/irb4600-40/irb4600-40.json'  # TODO: how to add a good default value here?
     )
     global_scale = FloatProperty(
-        name="Scale",
+        name='Scale',
         min=0.01, max=1000.0,
         default=1.0,
     )
@@ -92,15 +92,15 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         from . import export_webots
         from mathutils import Matrix
 
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "global_scale", "check_existing", "filter_glob"))
+        keywords = self.as_keywords(ignore=('axis_forward', 'axis_up', 'global_scale', 'check_existing', 'filter_glob'))
         global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4() * Matrix.Scale(self.global_scale, 4)
-        keywords["global_matrix"] = global_matrix
+        keywords['global_matrix'] = global_matrix
 
         return export_webots.save(context, **keywords)
 
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportWebots.bl_idname, text="Webots (.wbt)")
+    self.layout.operator(ExportWebots.bl_idname, text='Webots (.wbt)')
 
 
 def register():
@@ -113,5 +113,5 @@ def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     register()
