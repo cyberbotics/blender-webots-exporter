@@ -19,3 +19,7 @@ cp export_webots.py "$BLENDER_ADD_ON_PATH/export_webots"
 ```
 
 Enable the "Webots exporter" add-on in `Blender / Preferences / Add-ons / Testing`.
+
+## References
+
+This script has been inspired by the [Blender X3D exporter](https://github.com/sobotka/blender-addons/blob/master/io_scene_x3d/export_x3d.py) of Campbell Barton, Bart, Bastien Montagne, Seva Alekseyev.
