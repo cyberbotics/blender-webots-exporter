@@ -70,7 +70,7 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         name='User data path',
         description='File path targeting the JSON file containing user custom data.',
         subtype='FILE_PATH',
-        default=bpy.data.filepath.replace('.blend', '.json')
+        default='data.json' if not bpy.data.filepath else bpy.data.filepath.replace('.blend', '.json')
     )
     global_scale = FloatProperty(
         name='Scale',
