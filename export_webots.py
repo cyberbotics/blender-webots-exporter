@@ -159,14 +159,14 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         mesh_id_group = GROUP_ + mesh_id
         mesh_id_coords = COORDS_ + mesh_id
 
-        # tessellation faces may not exist
+        # Tessellation faces may not exist.
         if not mesh.tessfaces and mesh.polygons:
             mesh.update(calc_tessface=True)
 
         if not mesh.tessfaces:
             return
 
-        # use _ifs_TRANSFORM suffix so we dont collide with transform node when hierarchys are used.
+        # Use _IFS_TRANSFORM suffix so we dont collide with transform node when hierarchys are used.
         (skipUselessTransform, supplementaryCurvyBracket) = write_transform_begin(obj, matrix, obj_id + _IFS + _TRANSFORM)
 
         if mesh.tag:
