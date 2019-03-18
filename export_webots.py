@@ -133,29 +133,34 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         if not identityScale:
             fw('scale %.6g %.6g %.6g\n' % scale[:])
 
-        if isWebotsNode and 'boundingObject' in node_conversion_data:
-            if 'custom' in node_conversion_data['boundingObject']:
-                fw('boundingObject %s\n' % node_conversion_data['boundingObject']['custom'])
-            else:
-                fw('boundingObject Transform {\n')
-                x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
-                y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
-                z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
-                fw('translation %.6g %.6g %.6g\n' % (x, y, z))
-                fw('children [\n')
-                fw('Box {\n')
-                fw('size %.6g %.6g %.6g\n' % obj.dimensions[:])
+        if isWebotsNode:
+            if 'fields' in node_conversion_data:
+                for fieldName in node_conversion_data['fields'].keys():
+                    fieldValue = node_conversion_data['fields'][fieldName]
+                    fw('%s %s\n' % (fieldName, str(fieldValue)))
+            if 'boundingObject' in node_conversion_data:
+                if 'custom' in node_conversion_data['boundingObject']:
+                    fw('boundingObject %s\n' % node_conversion_data['boundingObject']['custom'])
+                else:
+                    fw('boundingObject Transform {\n')
+                    x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
+                    y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
+                    z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
+                    fw('translation %.6g %.6g %.6g\n' % (x, y, z))
+                    fw('children [\n')
+                    fw('Box {\n')
+                    fw('size %.6g %.6g %.6g\n' % obj.dimensions[:])
+                    fw('}\n')
+                    fw(']\n')
+                    fw('}\n')
+            if 'physics' in node_conversion_data:
+                fw('physics Physics {\n')
+                for fieldName in node_conversion_data['physics'].keys():
+                    fieldValue = node_conversion_data['physics'][fieldName]
+                    if fieldName == 'mass':
+                        fw('density -1\n')
+                    fw('%s %s\n' % (fieldName, str(fieldValue)))
                 fw('}\n')
-                fw(']\n')
-                fw('}\n')
-        if isWebotsNode and 'physics' in node_conversion_data:
-            fw('physics Physics {\n')
-            for fieldName in node_conversion_data['physics'].keys():
-                fieldValue = node_conversion_data['physics'][fieldName]
-                if fieldName == 'mass':
-                    fw('density -1')
-                fw('%s %s\n' % (fieldName, str(fieldValue)))
-            fw('}\n')
 
         fw('children [\n')
 
