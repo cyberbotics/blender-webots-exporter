@@ -90,15 +90,13 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         identity = identityTranslation and identityRotation and identityScale
 
         hingeJoint = False
-        exportBoundingObject = False
 
         isWebotsNode = def_id in conversion_data
         if isWebotsNode:
             fw('DEF %s ' % def_id)
-            node_data = conversion_data[def_id]
-            fw('%s {\n' % node_data['webotsType'])
-            hingeJoint = node_data['webotsType'] == 'HingeJoint'
-            exportBoundingObject = True
+            node_conversion_data = conversion_data[def_id]
+            fw('%s {\n' % node_conversion_data['webotsType'])
+            hingeJoint = node_conversion_data['webotsType'] == 'HingeJoint'
         elif identity:
             return (True, False)  # Skipped useless transform.
         else:
@@ -107,26 +105,26 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             fw('Transform {\n')
 
         if hingeJoint:
-            node_data = conversion_data[def_id]
+            node_conversion_data = conversion_data[def_id]
             fw('jointParameters HingeJointParameters {\n')
             if not identityTranslation:
                 fw('anchor %.6g %.6g %.6g\n' % translation[:])
-            fw('axis %s\n' % node_data['hingeJointParameters']['axis'])
+            fw('axis %s\n' % node_conversion_data['hingeJointParameters']['axis'])
             fw('}\n')
             fw('device [\n')
-            if 'motorName' in node_data:
+            if 'motorName' in node_conversion_data:
                 fw('RotationalMotor {\n')
-                fw('name "%s"\n' % node_data['motorName'])
+                fw('name "%s"\n' % node_conversion_data['motorName'])
                 fw('maxTorque 100000\n')
                 fw('}\n')
-            if 'positionSensorName' in node_data:
+            if 'positionSensorName' in node_conversion_data:
                 fw('PositionSensor {\n')
-                fw('name "%s"\n' % node_data['positionSensorName'])
+                fw('name "%s"\n' % node_conversion_data['positionSensorName'])
                 fw('}\n')
             fw(']\n')
             fw('endPoint Solid {\n')
-            if 'motorName' in node_data:
-                fw('name "%s"\n' % node_data['motorName'])
+            if 'motorName' in node_conversion_data:
+                fw('name "%s"\n' % node_conversion_data['motorName'])
 
         if not identityTranslation:
             fw('translation %.6g %.6g %.6g\n' % translation[:])
@@ -135,22 +133,25 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         if not identityScale:
             fw('scale %.6g %.6g %.6g\n' % scale[:])
 
-        if exportBoundingObject:
-            fw('boundingObject Transform {\n')
-            x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
-            y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
-            z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
-            fw('translation %.6g %.6g %.6g\n' % (x, y, z))
-            fw('children [\n')
-            fw('Box {\n')
-            fw('size %.6g %.6g %.6g\n' % obj.dimensions[:])
-            fw('}\n')
-            fw(']\n')
-            fw('}\n')
-        if isWebotsNode and 'physics' in node_data:
+        if isWebotsNode and 'boundingObject' in node_conversion_data:
+            if 'custom' in node_conversion_data['boundingObject']:
+                fw('boundingObject %s\n' % node_conversion_data['boundingObject']['custom'])
+            else:
+                fw('boundingObject Transform {\n')
+                x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
+                y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
+                z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
+                fw('translation %.6g %.6g %.6g\n' % (x, y, z))
+                fw('children [\n')
+                fw('Box {\n')
+                fw('size %.6g %.6g %.6g\n' % obj.dimensions[:])
+                fw('}\n')
+                fw(']\n')
+                fw('}\n')
+        if isWebotsNode and 'physics' in node_conversion_data:
             fw('physics Physics {\n')
-            for fieldName in node_data['physics'].keys():
-                fieldValue = node_data['physics'][fieldName]
+            for fieldName in node_conversion_data['physics'].keys():
+                fieldValue = node_conversion_data['physics'][fieldName]
                 if fieldName == 'mass':
                     fw('density -1')
                 fw('%s %s\n' % (fieldName, str(fieldValue)))

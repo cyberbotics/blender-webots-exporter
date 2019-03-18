@@ -39,7 +39,8 @@ During the exportation, if a key of this JSON Object match with the slugified Bl
 
 A conversion JSON Object could contain the following conversion rules:
 
-- `physics`: Object which can contain the Webots Physics node fields (like `mass`, `density` and `centerOfMass`)
+- `physics`: Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`)
+- `boundingObject`: Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject.
 
 Examples:
 
