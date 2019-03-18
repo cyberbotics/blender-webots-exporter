@@ -108,7 +108,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             node_conversion_data = conversion_data[def_id]
             if 'jointParameters' in node_conversion_data:
                 fw('jointParameters %sJointParameters {\n' % ('Hinge' if 'Hinge' in node_conversion_data['type'] else ''))
-                if not identityTranslation:
+                if not identityTranslation and 'Hinge' in node_conversion_data['type']:
                     fw('anchor %.6g %.6g %.6g\n' % translation[:])
                 for fieldName in node_conversion_data['jointParameters'].keys():
                     fieldValue = node_conversion_data['jointParameters'][fieldName]
@@ -116,9 +116,15 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                 fw('}\n')
             fw('device [\n')
             if 'motorName' in node_conversion_data:
-                fw('RotationalMotor {\n')
+                if 'Hinge' in node_conversion_data['type']:
+                    fw('RotationalMotor {\n')
+                else:
+                    fw('LinearMotor {\n')
                 fw('name "%s"\n' % node_conversion_data['motorName'])
-                fw('maxTorque 100000\n')
+                if 'Hinge' in node_conversion_data['type']:
+                    fw('maxTorque 100000\n')
+                else:
+                    fw('maxForce 100000\n')
                 fw('}\n')
             if 'positionSensorName' in node_conversion_data:
                 fw('PositionSensor {\n')
