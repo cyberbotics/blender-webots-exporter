@@ -79,7 +79,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         fw('TexturedBackgroundLight {\n')
         fw('}\n')
 
-    def writeTransform_begin(obj, matrix, def_id):
+    def write_transform_begin(obj, matrix, def_id):
         loc, rot, sca = matrix.decompose()
         rot = rot.to_axis_angle()
         rot = (*rot[0], rot[1])
@@ -167,7 +167,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             return
 
         # use _ifs_TRANSFORM suffix so we dont collide with transform node when hierarchys are used.
-        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, obj_id + _IFS + _TRANSFORM)
+        (skipUselessTransform, supplementaryCurvyBracket) = write_transform_begin(obj, matrix, obj_id + _IFS + _TRANSFORM)
 
         if mesh.tag:
             fw('USE %s\n' % (mesh_id_group))
@@ -377,7 +377,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
 
         obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep='_')
 
-        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, obj_main_id + _TRANSFORM)
+        (skipUselessTransform, supplementaryCurvyBracket) = write_transform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, obj_main_id + _TRANSFORM)
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
