@@ -10,8 +10,13 @@
     "jointParameters": {
       "axis": "0 0 -1"
     },
-    "motorName": "A motor",
-    "positionSensorName": "A sensor",
+    "motor": {
+      "name": "A motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "A sensor"
+    },
     "physics": {
       "density": 1150
     },
@@ -23,8 +28,13 @@
     "jointParameters": {
       "axis": "0 -1 0"
     },
-    "motorName": "B motor",
-    "positionSensorName": "B sensor",
+    "motor": {
+      "name": "B motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "B sensor"
+    },
     "physics": {
       "density": 500
     },
@@ -36,8 +46,13 @@
     "jointParameters": {
       "axis": "0 -1 0"
     },
-    "motorName": "C motor",
-    "positionSensorName": "C sensor",
+    "motor": {
+      "name": "C motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "C sensor"
+    },
     "physics": {
       "density": 400
     },
@@ -49,8 +64,13 @@
     "jointParameters": {
       "axis": "1 0 0"
     },
-    "motorName": "D motor",
-    "positionSensorName": "D sensor",
+    "motor": {
+      "name": "D motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "D sensor"
+    },
     "physics": {
       "density": 300
     },
@@ -62,8 +82,13 @@
     "jointParameters": {
       "axis": "0 1 0"
     },
-    "motorName": "E motor",
-    "positionSensorName": "E sensor",
+    "motor": {
+      "name": "E motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "E sensor"
+    },
     "physics": {
       "density": 200
     },
@@ -75,8 +100,13 @@
     "jointParameters": {
       "axis": "1 0 0"
     },
-    "motorName": "F motor",
-    "positionSensorName": "F sensor",
+    "motor": {
+      "name": "F motor",
+      "maxTorque": 10000
+    },
+    "positionSensor": {
+      "name": "F sensor"
+    },
     "physics": {
       "density": 100
     },

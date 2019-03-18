@@ -115,25 +115,33 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                     fw('%s %s\n' % (fieldName, str(fieldValue)))
                 fw('}\n')
             fw('device [\n')
-            if 'motorName' in node_conversion_data:
+            if 'motor' in node_conversion_data:
+                motor = node_conversion_data['motor']
                 if 'Hinge' in node_conversion_data['type']:
                     fw('RotationalMotor {\n')
                 else:
                     fw('LinearMotor {\n')
-                fw('name "%s"\n' % node_conversion_data['motorName'])
-                if 'Hinge' in node_conversion_data['type']:
-                    fw('maxTorque 100000\n')
-                else:
-                    fw('maxForce 100000\n')
+                for fieldName in motor.keys():
+                    fieldValue = motor[fieldName]
+                    if fieldName == "name":
+                        fw('%s "%s"\n' % (fieldName, str(fieldValue)))
+                    else:
+                        fw('%s %s\n' % (fieldName, str(fieldValue)))
                 fw('}\n')
-            if 'positionSensorName' in node_conversion_data:
+            if 'positionSensor' in node_conversion_data:
+                positionSensor = node_conversion_data['positionSensor']
                 fw('PositionSensor {\n')
-                fw('name "%s"\n' % node_conversion_data['positionSensorName'])
+                for fieldName in positionSensor.keys():
+                    fieldValue = positionSensor[fieldName]
+                    if fieldName == "name":
+                        fw('%s "%s"\n' % (fieldName, str(fieldValue)))
+                    else:
+                        fw('%s %s\n' % (fieldName, str(fieldValue)))
                 fw('}\n')
             fw(']\n')
             fw('endPoint Solid {\n')
-            if 'motorName' in node_conversion_data:
-                fw('name "%s"\n' % node_conversion_data['motorName'])
+            if 'motor' in node_conversion_data and 'name' in node_conversion_data['motor']:
+                fw('name "%s"\n' % node_conversion_data['motor']['name'])
 
         if not identityTranslation:
             fw('translation %.6g %.6g %.6g\n' % translation[:])

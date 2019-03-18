@@ -47,7 +47,8 @@ A conversion JSON Object could contain the following conversion rules:
 The following conversion rules are only available in the case of a `Joint` type:
 
 - `jointParameters`: JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`).
-
+- `motor`: JSON Object which can contain the [Webots LinearMotor or RotationalMotor node](https://www.cyberbotics.com/doc/reference/rotationalmotor) fields (like `name`, `maxTorque`, `maxPosition` or `maxVelocity`)
+- `positionSensor`: JSON Object which can contain the [Webots PositionSensor node](https://www.cyberbotics.com/doc/reference/positionsensor) fields (like `name`)
 
 Examples:
 
