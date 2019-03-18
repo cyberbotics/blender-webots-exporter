@@ -44,6 +44,11 @@ A conversion JSON Object could contain the following conversion rules:
 - `physics`: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`)
 - `boundingObject`: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject.
 
+The following conversion rules are only available in the case of a `Joint` type:
+
+- `jointParameters`: JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`).
+
+
 Examples:
 
 https://github.com/omichel/blender-webots-exporter/tree/master/examples

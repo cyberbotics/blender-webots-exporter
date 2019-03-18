@@ -7,7 +7,7 @@
   },
   "LINK_A": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "0 0 -1"
     },
     "motorName": "A motor",
@@ -20,7 +20,7 @@
   },
   "LINK_B": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "0 -1 0"
     },
     "motorName": "B motor",
@@ -33,7 +33,7 @@
   },
   "LINK_C": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "0 -1 0"
     },
     "motorName": "C motor",
@@ -46,7 +46,7 @@
   },
   "LINK_D": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "1 0 0"
     },
     "motorName": "D motor",
@@ -59,7 +59,7 @@
   },
   "LINK_E": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "0 1 0"
     },
     "motorName": "E motor",
@@ -72,7 +72,7 @@
   },
   "LINK_F": {
     "type": "HingeJoint",
-    "hingeJointParameters": {
+    "jointParameters": {
       "axis": "1 0 0"
     },
     "motorName": "F motor",
