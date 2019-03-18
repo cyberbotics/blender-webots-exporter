@@ -8,7 +8,10 @@
       "axis": "0 0 -1"
     },
     "motorName": "A motor",
-    "positionSensorName": "A sensor"
+    "positionSensorName": "A sensor",
+    "physics": {
+      "density": 1150
+    }
   },
   "LINK_B": {
     "webotsType": "HingeJoint",
@@ -16,7 +19,10 @@
       "axis": "0 -1 0"
     },
     "motorName": "B motor",
-    "positionSensorName": "B sensor"
+    "positionSensorName": "B sensor",
+    "physics": {
+      "density": 500
+    }
   },
   "LINK_C": {
     "webotsType": "HingeJoint",
@@ -24,7 +30,10 @@
       "axis": "0 -1 0"
     },
     "motorName": "C motor",
-    "positionSensorName": "C sensor"
+    "positionSensorName": "C sensor",
+    "physics": {
+      "density": 400
+    }
   },
   "LINK_D": {
     "webotsType": "HingeJoint",
@@ -32,7 +41,10 @@
       "axis": "1 0 0"
     },
     "motorName": "D motor",
-    "positionSensorName": "D sensor"
+    "positionSensorName": "D sensor",
+    "physics": {
+      "density": 300
+    }
   },
   "LINK_E": {
     "webotsType": "HingeJoint",
@@ -40,7 +52,10 @@
       "axis": "0 1 0"
     },
     "motorName": "E motor",
-    "positionSensorName": "E sensor"
+    "positionSensorName": "E sensor",
+    "physics": {
+      "density": 200
+    }
   },
   "LINK_F": {
     "webotsType": "HingeJoint",
@@ -48,6 +63,9 @@
       "axis": "1 0 0"
     },
     "motorName": "F motor",
-    "positionSensorName": "F sensor"
+    "positionSensorName": "F sensor",
+    "physics": {
+      "density": 100
+    }
   }
 }

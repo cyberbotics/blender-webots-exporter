@@ -56,9 +56,9 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
     filename_ext = '.wbt'
     filter_glob = StringProperty(default='*.wbt', options={'HIDDEN'})
 
-    default_data_path = 'data.json'
+    default_converstion_file_path = 'data.json'
     try:
-        default_data_path = bpy.data.filepath.replace('.blend', '.json')
+        default_converstion_file_path = bpy.data.filepath.replace('.blend', '.json')
     except AttributeError:
         pass
 
@@ -72,11 +72,11 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
         description='Use transformed mesh data from each object',
         default=True,
     )
-    user_data_path = StringProperty(
-        name='User data path',
-        description='File path targeting the JSON file containing user custom data.',
+    converstion_file_path = StringProperty(
+        name='Conversion File Path',
+        description='File path targeting the JSON file containing the custom Blender->Webots conversion rules.',
         subtype='FILE_PATH',
-        default=default_data_path
+        default=default_converstion_file_path
     )
     global_scale = FloatProperty(
         name='Scale',

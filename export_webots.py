@@ -24,7 +24,7 @@ import mathutils
 from bpy_extras.io_utils import create_derived_objects, free_derived_objects
 
 
-def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=True, user_data={}, path_mode='AUTO'):
+def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=True, conversion_data={}, path_mode='AUTO'):
     """Export to wbt file."""
 
     # Global Setup
@@ -80,22 +80,26 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         fw('}\n')
 
     def write_transform_begin(obj, matrix, def_id):
-        loc, rot, sca = matrix.decompose()
-        rot = rot.to_axis_angle()
-        rot = (*rot[0], rot[1])
+        translation, rotation, scale = matrix.decompose()
+        rotation = rotation.to_axis_angle()
+        rotation = (*rotation[0], rotation[1])
+
+        identityTranslation = nearly_equal(translation[0], 0.0) and nearly_equal(translation[1], 0.0) and nearly_equal(translation[2], 0.0)
+        identityRotation = nearly_equal(rotation[3], 0.0)
+        identityScale = nearly_equal(scale[0], 1.0) and nearly_equal(scale[1], 1.0) and nearly_equal(scale[2], 1.0)
+        identity = identityTranslation and identityRotation and identityScale
 
         hingeJoint = False
         exportBoundingObject = False
-        exportPhysics = False
-        if def_id in user_data:
+
+        isWebotsNode = def_id in conversion_data
+        if isWebotsNode:
             fw('DEF %s ' % def_id)
-            node_data = user_data[def_id]
+            node_data = conversion_data[def_id]
             fw('%s {\n' % node_data['webotsType'])
             hingeJoint = node_data['webotsType'] == 'HingeJoint'
-            exportPhysics = node_data['webotsType'] != 'Robot'  # TODO: static root should be a parameter.
             exportBoundingObject = True
-        elif nearly_equal(loc[0], 0.0) and nearly_equal(loc[1], 0.0) and nearly_equal(loc[2], 0.0) and nearly_equal(rot[3], 0.0) and \
-                nearly_equal(sca[0], 1.0) and nearly_equal(sca[1], 1.0) and nearly_equal(sca[2], 1.0):
+        elif identity:
             return (True, False)  # Skipped useless transform.
         else:
             if def_id is not None:
@@ -103,9 +107,10 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             fw('Transform {\n')
 
         if hingeJoint:
-            node_data = user_data[def_id]
+            node_data = conversion_data[def_id]
             fw('jointParameters HingeJointParameters {\n')
-            fw('anchor %.6f %.6f %.6f\n' % loc[:])
+            if not identityTranslation:
+                fw('anchor %.6g %.6g %.6g\n' % translation[:])
             fw('axis %s\n' % node_data['hingeJointParameters']['axis'])
             fw('}\n')
             fw('device [\n')
@@ -123,24 +128,32 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             if 'motorName' in node_data:
                 fw('name "%s"\n' % node_data['motorName'])
 
-        fw('translation %.6f %.6f %.6f\n' % loc[:])
-        fw('scale %.6f %.6f %.6f\n' % sca[:])
-        fw('rotation %.6f %.6f %.6f %.6f\n' % rot)
+        if not identityTranslation:
+            fw('translation %.6g %.6g %.6g\n' % translation[:])
+        if not identityRotation:
+            fw('rotation %.6g %.6g %.6g %.6g\n' % rotation)
+        if not identityScale:
+            fw('scale %.6g %.6g %.6g\n' % scale[:])
 
-        if exportPhysics:
-            fw('physics Physics {\n')
-            fw('}\n')
         if exportBoundingObject:
             fw('boundingObject Transform {\n')
             x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
             y = 0.5 * (max([v[1] for v in obj.bound_box]) + min([v[1] for v in obj.bound_box]))
             z = 0.5 * (max([v[2] for v in obj.bound_box]) + min([v[2] for v in obj.bound_box]))
-            fw('translation %.6f %.6f %.6f\n' % (x, y, z))
+            fw('translation %.6g %.6g %.6g\n' % (x, y, z))
             fw('children [\n')
             fw('Box {\n')
-            fw('size %.6f %.6f %.6f\n' % obj.dimensions[:])
+            fw('size %.6g %.6g %.6g\n' % obj.dimensions[:])
             fw('}\n')
             fw(']\n')
+            fw('}\n')
+        if isWebotsNode and 'physics' in node_data:
+            fw('physics Physics {\n')
+            for fieldName in node_data['physics'].keys():
+                fieldValue = node_data['physics'][fieldName]
+                if fieldName == 'mass':
+                    fw('density -1')
+                fw('%s %s\n' % (fieldName, str(fieldValue)))
             fw('}\n')
 
         fw('children [\n')
@@ -256,8 +269,8 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                         ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
                         emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
 
-                        fw('baseColor %.3f %.3f %.3f\n' % clamp_color(diffuse))
-                        fw('emissiveColor %.3f %.3f %.3f\n' % clamp_color(emissive))
+                        fw('baseColor %.6g %.6g %.6g\n' % clamp_color(diffuse))
+                        fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
                         fw('metalness 0\n')
                         fw('roughness 0.5\n')
 
@@ -270,7 +283,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                     if is_smooth:
                         # use Auto-Smooth angle, if enabled. Otherwise make
                         # the mesh perfectly smooth by creaseAngle > pi.
-                        fw('creaseAngle %.4f\n' % (mesh.auto_smooth_angle if mesh.use_auto_smooth else 1.0))
+                        fw('creaseAngle %.6g\n' % (mesh.auto_smooth_angle if mesh.use_auto_smooth else 1.0))
 
                     # for IndexedTriangleSet we use a uv per vertex so this isnt needed.
                     if is_uv:
@@ -307,7 +320,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                             fw('Coordinate {\n')
                             fw('point [\n')
                             for v in mesh.vertices:
-                                fw('%.6f %.6f %.6f ' % v.co[:])
+                                fw('%.6g %.6g %.6g ' % v.co[:])
                             fw('\n')
                             fw(']\n')
                             fw('}\n')
@@ -319,7 +332,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                         fw('point [\n')
                         for i in face_group:
                             for uv in mesh_faces_uv[i].uv:
-                                fw('%.4f %.4f ' % uv[:])
+                                fw('%.6g %.6g ' % uv[:])
                         del mesh_faces_uv
                         fw('\n')
                         fw(']\n')
@@ -457,7 +470,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
     print('Info: finished Webots export to %r' % file.name)
 
 
-def save(context, filepath, *, use_selection=True, use_mesh_modifiers=False, user_data_path='', global_matrix=None, path_mode='AUTO'):
+def save(context, filepath, *, use_selection=True, use_mesh_modifiers=False, converstion_file_path='', global_matrix=None, path_mode='AUTO'):
     bpy.path.ensure_ext(filepath, '.wbt')
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -467,12 +480,12 @@ def save(context, filepath, *, use_selection=True, use_mesh_modifiers=False, use
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
 
-    user_data = {}
-    if user_data_path and os.path.isfile(user_data_path):
-        with open(user_data_path) as f:
-            user_data = json.load(f)
+    conversion_data = {}
+    if converstion_file_path and os.path.isfile(converstion_file_path):
+        with open(converstion_file_path) as f:
+            conversion_data = json.load(f)
 
-    export(file, global_matrix, context.scene, use_mesh_modifiers=use_mesh_modifiers, use_selection=use_selection, user_data=user_data, path_mode=path_mode)
+    export(file, global_matrix, context.scene, use_mesh_modifiers=use_mesh_modifiers, use_selection=use_selection, conversion_data=conversion_data, path_mode=path_mode)
 
     return {'FINISHED'}
 
