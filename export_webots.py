@@ -24,100 +24,30 @@ import mathutils
 from bpy_extras.io_utils import create_derived_objects, free_derived_objects
 
 
-def clight_color(col):
-    return tuple([max(min(c, 1.0), 0.0) for c in col])
+def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=True, user_data={}, path_mode='AUTO'):
+    """Export to wbt file."""
 
-
-def matrix_direction_neg_z(matrix):
-    return (matrix.to_3x3() * mathutils.Vector((0.0, 0.0, -1.0))).normalized()[:]
-
-
-def prefix_string(value, prefix):
-    return prefix + value
-
-
-def suffix_string(value, suffix):
-    return value + suffix
-
-
-def bool_as_str(value):
-    return ('FALSE', 'TRUE')[bool(value)]
-
-
-def slugify(s):
-    if not s:
-        s = 'none'
-    s = s.upper()
-    for k in range(len(s)):
-        if not re.match(r'[A-Z]', s[k]):
-            s = s[:k] + '_' + s[(k + 1):]
-    if not re.match(r'[A-Z]', s[0]):
-        s = '_' + s
-    while '__' in s:
-        s = s.replace('__', '_')
-    if s[-1] == '_':
-        s = s[:-1]
-    return s
-
-
-def nearly_equal(a, b, sig_fig=5):
-    return a == b or int(a * 10 ** sig_fig) == int(b * 10 ** sig_fig)
-
-
-def build_hierarchy(objects):
-    """Returns parent child relationships, skipping."""
-    objects_set = set(objects)
-    par_lookup = {}
-
-    def test_parent(parent):
-        while (parent is not None) and (parent not in objects_set):
-            parent = parent.parent
-        return parent
-
-    for obj in objects:
-        par_lookup.setdefault(test_parent(obj.parent), []).append((obj, []))
-
-    for parent, children in par_lookup.items():
-        for obj, subchildren in children:
-            subchildren[:] = par_lookup.get(obj, [])
-
-    return par_lookup.get(None, [])
-
-
-# -----------------------------------------------------------------------------
-# Functions for writing output file
-# -----------------------------------------------------------------------------
-
-def export(file,
-           global_matrix,
-           scene,
-           use_mesh_modifiers=False,
-           use_selection=True,
-           user_data={},
-           path_mode='AUTO'
-           ):
-
-    # -------------------------------------------------------------------------
     # Global Setup
-    # -------------------------------------------------------------------------
     import bpy_extras
     from bpy_extras.io_utils import unique_name
     from xml.sax.saxutils import escape
 
-    uuid_cache_object = {}    # object
-    uuid_cache_mesh = {}      # mesh
-    uuid_cache_image = {}     # image
+    # Caches
+    uuid_cache_object = {}
+    uuid_cache_mesh = {}
+    uuid_cache_image = {}
+
+    # Decorators
+    COORDS_ = 'COORDS_'
     OB_ = 'OB_'
     ME_ = 'ME_'
     IM_ = 'IM_'
     GROUP_ = 'GROUP_'
+    _IFS = '_IFS'
     _TRANSFORM = '_TRANSFORM'
 
-    # store files to copy
-    copy_set = set()
-
-    # store names of newly cerated meshes, so we dont overlap
-    mesh_name_set = set()
+    copy_set = set()  # Store files to copy.
+    mesh_name_set = set()  # Store names of newly cerated meshes, so we dont overlap
 
     base_src = os.path.dirname(bpy.data.filepath)
     base_dst = os.path.dirname(file.name)
@@ -135,11 +65,7 @@ def export(file,
     fw.indentation = 0
     fw.isLastCharacterACariageReturn = False
 
-    # -------------------------------------------------------------------------
-    # File Writing Functions
-    # -------------------------------------------------------------------------
-
-    def writeHeader():
+    def write_header():
         fw('#VRML_SIM R2019a utf8\n')
         fw('WorldInfo {\n')
         fw('basicTimeStep 8\n')
@@ -152,9 +78,6 @@ def export(file,
         fw('}\n')
         fw('TexturedBackgroundLight {\n')
         fw('}\n')
-
-    def writeFooter():
-        pass
 
     def writeTransform_begin(obj, matrix, def_id):
         loc, rot, sca = matrix.decompose()
@@ -224,17 +147,17 @@ def export(file,
 
         return (False, hingeJoint)
 
-    def writeTransform_end(supplementaryCurvyBracket):
+    def write_transform_end(supplementaryCurvyBracket):
         fw(']\n')
         fw('}\n')
         if supplementaryCurvyBracket:
             fw('}\n')
 
-    def writeIndexedFaceSet(obj, mesh, matrix, world):
+    def write_indexed_face_set(obj, mesh, matrix, world):
         obj_id = unique_name(obj, OB_ + obj.name, uuid_cache_object, clean_func=slugify, sep='_')
         mesh_id = unique_name(mesh, ME_ + mesh.name, uuid_cache_mesh, clean_func=slugify, sep='_')
-        mesh_id_group = prefix_string(mesh_id, GROUP_)
-        mesh_id_coords = prefix_string(mesh_id, 'COORDS_')
+        mesh_id_group = GROUP_ + mesh_id
+        mesh_id_coords = COORDS_ + mesh_id
 
         # tessellation faces may not exist
         if not mesh.tessfaces and mesh.polygons:
@@ -243,9 +166,8 @@ def export(file,
         if not mesh.tessfaces:
             return
 
-        # use _ifs_TRANSFORM suffix so we dont collide with transform node when
-        # hierarchys are used.
-        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, suffix_string(obj_id, '_IFS' + _TRANSFORM))
+        # use _ifs_TRANSFORM suffix so we dont collide with transform node when hierarchys are used.
+        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj, matrix, obj_id + _IFS + _TRANSFORM)
 
         if mesh.tag:
             fw('USE %s\n' % (mesh_id_group))
@@ -278,7 +200,6 @@ def export(file,
 
             mesh_materials_use_face_texture = [getattr(material, 'use_face_texture', True) for material in mesh_materials]
 
-            # fast access!
             mesh_faces = mesh.tessfaces[:]
             mesh_faces_materials = [f.material_index for f in mesh_faces]
             mesh_faces_vertices = [f.vertices[:] for f in mesh_faces]
@@ -291,14 +212,14 @@ def export(file,
                 ]
 
                 mesh_faces_image_unique = set(mesh_faces_image)
-            elif len(set(mesh_material_images) | {None}) > 1:  # make sure there is at least one image
+            elif len(set(mesh_material_images) | {None}) > 1:  # Make sure there is at least one image
                 mesh_faces_image = [mesh_material_images[material_index] for material_index in mesh_faces_materials]
                 mesh_faces_image_unique = set(mesh_faces_image)
             else:
                 mesh_faces_image = [None] * len(mesh_faces)
                 mesh_faces_image_unique = {None}
 
-            # group faces
+            # Group faces.
             face_groups = {}
             for material_index in range(len(mesh_materials)):
                 for image in mesh_faces_image_unique:
@@ -308,7 +229,7 @@ def export(file,
             for i, (material_index, image) in enumerate(zip(mesh_faces_materials, mesh_faces_image)):
                 face_groups[material_index, image].append(i)
 
-            # same as face_groups.items() but sorted so we can get predictable output.
+            # Same as face_groups.items() but sorted so we can get predictable output.
             face_groups_items = list(face_groups.items())
             face_groups_items.sort(key=lambda m: (m[0][0], getattr(m[0][1], 'name', '')))
 
@@ -320,34 +241,23 @@ def export(file,
 
                     is_smooth = False
 
-                    # kludge but as good as it gets!
                     for i in face_group:
                         if mesh_faces[i].use_smooth:
                             is_smooth = True
                             break
 
-                    # UV's and VCols split verts off which effects smoothing
-                    # force writing normals in this case.
-                    # Also, creaseAngle is not supported for IndexedTriangleSet,
-                    # so write normals when is_smooth (otherwise
-                    # IndexedTriangleSet can have only all smooth/all flat shading).
                     fw('appearance PBRAppearance {\n')
 
                     if image:
-                        writeImageTexture(image)
+                        write_image_texture(image)
 
                     if material:
-                        emit = material.emit
-                        diffuseColor = material.diffuse_color[:]
-                        if world:
-                            ambiColor = ((material.ambient * 2.0) * world.ambient_color)[:]
-                        else:
-                            ambiColor = 0.0, 0.0, 0.0
+                        diffuse = material.diffuse_color[:]
+                        ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
+                        emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
 
-                        emitColor = tuple(((c * emit) + ambiColor[i]) / 2.0 for i, c in enumerate(diffuseColor))
-
-                        fw('baseColor %.3f %.3f %.3f\n' % clight_color(diffuseColor))
-                        fw('emissiveColor %.3f %.3f %.3f\n' % clight_color(emitColor))
+                        fw('baseColor %.3f %.3f %.3f\n' % clamp_color(diffuse))
+                        fw('emissiveColor %.3f %.3f %.3f\n' % clamp_color(emissive))
                         fw('metalness 0\n')
                         fw('roughness 0.5\n')
 
@@ -357,7 +267,6 @@ def export(file,
 
                     fw('geometry IndexedFaceSet {\n')
 
-                    # --- Write IndexedFaceSet Attributes (same as IndexedTriangleSet)
                     if is_smooth:
                         # use Auto-Smooth angle, if enabled. Otherwise make
                         # the mesh perfectly smooth by creaseAngle > pi.
@@ -377,7 +286,6 @@ def export(file,
                                 j += 3
                         fw('\n')
                         fw(']\n')
-                        # --- end texCoordIndex
 
                     if True:
                         fw('coordIndex [\n')
@@ -389,9 +297,7 @@ def export(file,
                                 fw('%i %i %i %i -1 ' % fv)
                         fw('\n')
                         fw(']\n')
-                        # --- end coordIndex
 
-                    # --- Write IndexedFaceSet Elements
                     if True:
                         if is_coords_written:
                             fw('coord USE %s\n' % (mesh_id_coords))
@@ -419,15 +325,13 @@ def export(file,
                         fw(']\n')
                         fw('}\n')
 
-                    # --- output vertexColors
-
-                    # --- output closing braces
                     fw('}\n')  # --- IndexedFaceSet
                     fw('}\n')  # --- Shape
-        if not skipUselessTransform:
-            writeTransform_end(supplementaryCurvyBracket)
 
-    def writeImageTexture(image):
+        if not skipUselessTransform:
+            write_transform_end(supplementaryCurvyBracket)
+
+    def write_image_texture(image):
         image_id = unique_name(image, IM_ + image.name, uuid_cache_image, clean_func=slugify, sep='_')
 
         if image.tag:
@@ -439,8 +343,7 @@ def export(file,
             fw('DEF %s ' % image_id)
             fw('ImageTexture {\n')
 
-            # collect image paths, can load multiple
-            # [relative, name-only, absolute]
+            # Collect image paths, can load multiple [relative, name-only, absolute]
             filepath = image.filepath
             filepath_full = bpy.path.abspath(filepath, library=image.library)
             filepath_ref = bpy_extras.io_utils.path_reference(filepath_full, base_src, base_dst, path_mode, 'textures', copy_set, image.library)
@@ -459,10 +362,8 @@ def export(file,
             fw('url [ "%s" ]\n' % ' '.join(['"%s"' % escape(f) for f in images]))
             fw('}\n')
 
-    # -------------------------------------------------------------------------
-    # Export Object Hierarchy (recursively called)
-    # -------------------------------------------------------------------------
     def export_object(obj_main_parent, obj_main, obj_children):
+        """Export Object Hierarchy (recursively called)."""
         matrix_fallback = mathutils.Matrix()
         world = scene.world
         free, derived = create_derived_objects(scene, obj_main)
@@ -476,13 +377,11 @@ def export(file,
 
         obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep='_')
 
-        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, suffix_string(obj_main_id, _TRANSFORM))
+        (skipUselessTransform, supplementaryCurvyBracket) = writeTransform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, obj_main_id + _TRANSFORM)
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type
-
-            # make transform node relative
-            obj_matrix = obj_main_matrix_world_invert * obj_matrix
+            obj_matrix = obj_main_matrix_world_invert * obj_matrix  # Make transform node relative.
 
             if obj_type in {'MESH', 'CURVE', 'SURFACE', 'FONT'}:
                 if (obj_type != 'MESH') or (use_mesh_modifiers and obj.is_modified(scene, 'PREVIEW')):
@@ -505,11 +404,10 @@ def export(file,
                             count += 1
                         mesh_name_set.add(me_name_new)
                         del me_name_new, me_name_org, count
-                    # done
 
-                    writeIndexedFaceSet(obj, me, obj_matrix, world)
+                    write_indexed_face_set(obj, me, obj_matrix, world)
 
-                    # free mesh created with create_mesh()
+                    # Rree mesh created with create_mesh()
                     if do_remove:
                         bpy.data.meshes.remove(me)
 
@@ -520,19 +418,16 @@ def export(file,
         if free:
             free_derived_objects(obj_main)
 
-        # ---------------------------------------------------------------------
-        # write out children recursively
-        # ---------------------------------------------------------------------
+        # Write out children recursively
         for obj_child, obj_child_children in obj_children:
             export_object(obj_main, obj_child, obj_child_children)
 
         if not skipUselessTransform:
-            writeTransform_end(supplementaryCurvyBracket)
+            write_transform_end(supplementaryCurvyBracket)
 
-    # -------------------------------------------------------------------------
-    # Main Export Function
-    # -------------------------------------------------------------------------
     def export_main():
+        """Main Export Function."""
+
         # tag un-exported IDs
         bpy.data.meshes.tag(False)
         bpy.data.materials.tag(False)
@@ -544,42 +439,26 @@ def export(file,
             objects = [obj for obj in scene.objects if obj.is_visible(scene)]
 
         print('Info: starting Webots export to %r...' % file.name)
-        writeHeader()
+        write_header()
 
         objects_hierarchy = build_hierarchy(objects)
 
         for obj_main, obj_main_children in objects_hierarchy:
             export_object(None, obj_main, obj_main_children)
 
-        writeFooter()
-
     export_main()
 
-    # -------------------------------------------------------------------------
-    # global cleanup
-    # -------------------------------------------------------------------------
+    # Global cleanup
     file.close()
 
-    # copy all collected files.
-    # print(copy_set)
+    # Copy all collected files.
     bpy_extras.io_utils.path_reference_copy(copy_set)
 
     print('Info: finished Webots export to %r' % file.name)
 
 
-##########################################################
-# Callbacks, needed before Main
-##########################################################
-
-def save(context, filepath, *,
-         use_selection=True,
-         use_mesh_modifiers=False,
-         user_data_path='',
-         global_matrix=None,
-         path_mode='AUTO'):
-
+def save(context, filepath, *, use_selection=True, use_mesh_modifiers=False, user_data_path='', global_matrix=None, path_mode='AUTO'):
     bpy.path.ensure_ext(filepath, '.wbt')
-
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -593,14 +472,58 @@ def save(context, filepath, *,
         with open(user_data_path) as f:
             user_data = json.load(f)
 
-    export(
-        file,
-        global_matrix,
-        context.scene,
-        use_mesh_modifiers=use_mesh_modifiers,
-        use_selection=use_selection,
-        user_data=user_data,
-        path_mode=path_mode
-    )
+    export(file, global_matrix, context.scene, use_mesh_modifiers=use_mesh_modifiers, use_selection=use_selection, user_data=user_data, path_mode=path_mode)
 
     return {'FINISHED'}
+
+
+def clamp_color(col):
+    return tuple([max(min(c, 1.0), 0.0) for c in col])
+
+
+def matrix_direction_neg_z(matrix):
+    return (matrix.to_3x3() * mathutils.Vector((0.0, 0.0, -1.0))).normalized()[:]
+
+
+def bool_as_str(value):
+    return ('FALSE', 'TRUE')[bool(value)]
+
+
+def slugify(s):
+    if not s:
+        s = 'none'
+    s = s.upper()
+    for k in range(len(s)):
+        if not re.match(r'[A-Z]', s[k]):
+            s = s[:k] + '_' + s[(k + 1):]
+    if not re.match(r'[A-Z]', s[0]):
+        s = '_' + s
+    while '__' in s:
+        s = s.replace('__', '_')
+    if s[-1] == '_':
+        s = s[:-1]
+    return s
+
+
+def nearly_equal(a, b, sig_fig=5):
+    return a == b or int(a * 10 ** sig_fig) == int(b * 10 ** sig_fig)
+
+
+def build_hierarchy(objects):
+    """Returns parent child relationships, skipping."""
+    objects_set = set(objects)
+    par_lookup = {}
+
+    def test_parent(parent):
+        while (parent is not None) and (parent not in objects_set):
+            parent = parent.parent
+        return parent
+
+    for obj in objects:
+        par_lookup.setdefault(test_parent(obj.parent), []).append((obj, []))
+
+    for parent, children in par_lookup.items():
+        for obj, subchildren in children:
+            subchildren[:] = par_lookup.get(obj, [])
+
+    return par_lookup.get(None, [])

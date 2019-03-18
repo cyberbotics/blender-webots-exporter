@@ -20,8 +20,8 @@ bl_info = {
     'location': 'File > Import-Export',
     'description': 'Export Webots',
     'warning': '',
-    'wiki_url': 'http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Web3D',
-    'support': 'TESTING',
+    'wiki_url': 'https://github.com/omichel/blender-webots-exporter/wiki',
+    'support': 'COMMUNITY',
     'category': 'Import-Export',
 }
 
