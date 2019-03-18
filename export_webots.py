@@ -377,7 +377,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
 
         obj_main_id = unique_name(obj_main, obj_main.name, uuid_cache_object, clean_func=slugify, sep='_')
 
-        (skipUselessTransform, supplementaryCurvyBracket) = write_transform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, obj_main_id + _TRANSFORM)
+        (skipUselessTransform, supplementaryCurvyBracket) = write_transform_begin(obj_main, obj_main_matrix if obj_main_parent else global_matrix * obj_main_matrix, obj_main_id)
 
         for obj, obj_matrix in (() if derived is None else derived):
             obj_type = obj.type

@@ -1,8 +1,8 @@
 {
-  "BASE_TRANSFORM": {
+  "BASE": {
     "webotsType": "Robot"
   },
-  "LINK1_TRANSFORM": {
+  "LINK_A": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 0 -1"
@@ -10,7 +10,7 @@
     "motorName": "A motor",
     "positionSensorName": "A sensor"
   },
-  "LINK2_TRANSFORM": {
+  "LINK_B": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 -1 0"
@@ -18,7 +18,7 @@
     "motorName": "B motor",
     "positionSensorName": "B sensor"
   },
-  "LINK3_TRANSFORM": {
+  "LINK_C": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 -1 0"
@@ -26,7 +26,7 @@
     "motorName": "C motor",
     "positionSensorName": "C sensor"
   },
-  "LINK4_TRANSFORM": {
+  "LINK_D": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "1 0 0"
@@ -34,7 +34,7 @@
     "motorName": "D motor",
     "positionSensorName": "D sensor"
   },
-  "LINK5_TRANSFORM": {
+  "LINK_E": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 1 0"
@@ -42,7 +42,7 @@
     "motorName": "E motor",
     "positionSensorName": "E sensor"
   },
-  "LINK6_TRANSFORM": {
+  "LINK_F": {
     "webotsType": "HingeJoint",
     "hingeJointParameters": {
       "axis": "1 0 0"
