@@ -1,12 +1,12 @@
 {
   "BASE": {
-    "webotsType": "Robot",
+    "type": "Robot",
     "boundingObject": {
       "custom": "Sphere { radius 0.1 }"
     }
   },
   "LINK_A": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 0 -1"
     },
@@ -19,7 +19,7 @@
     }
   },
   "LINK_B": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 -1 0"
     },
@@ -32,7 +32,7 @@
     }
   },
   "LINK_C": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 -1 0"
     },
@@ -45,7 +45,7 @@
     }
   },
   "LINK_D": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "1 0 0"
     },
@@ -58,7 +58,7 @@
     }
   },
   "LINK_E": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "0 1 0"
     },
@@ -71,7 +71,7 @@
     }
   },
   "LINK_F": {
-    "webotsType": "HingeJoint",
+    "type": "HingeJoint",
     "hingeJointParameters": {
       "axis": "1 0 0"
     },
