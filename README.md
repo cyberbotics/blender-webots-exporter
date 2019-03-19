@@ -2,6 +2,8 @@
 
 Blender add-on to export your Blender project to Webots.
 
+![Demo](demo.gif)
+
 ## Features
 
 - Export your Blender project to Webots
