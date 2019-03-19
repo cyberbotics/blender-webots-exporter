@@ -1,26 +1,29 @@
-# Blender to Webots exporter plugin
+# Blender to Webots exporter add-on
 
-Blender plugin to export to Webots files.
+Blender add-on to export your Blender project to Webots.
 
 ## Features
 
-- Export your Blender project to Webots.
-- Define Webots-specific data in a JSON file.
-- Supports collisions (AABB-based boxes or custom ones)
-- Supports joints (linear or rotational with custom axis)
-- Supports any Webots Solid nodes and extra-parameters.
+- Export your Blender project to Webots
+- Define conversion rules in a JSON file
+- Support collision export (either generated from the AABB boxes or manually defined)
+- Support joint export (linear or rotational with custom parameters including axis, limits, etc.)
+- Support the export of any [Webots Solid (or derived) node](https://www.cyberbotics.com/doc/reference/jointparameters) with custom fields (`Camera.width`, `name`, etc.).
+- Basic support of materials (colors and the base color map) to Webots PBR appearance.
 
 ## Requirements
 
-Tested on macOS and Linux for Blender 2.79.
+- [Blender 2.79b](https://www.blender.org)
+- [Webots R2019a.rev1](https://www.cyberbotics.com) or later
 
 ## Installation and Update
 
 Let say `$BLENDER_ADD_ON_PATH` is the Blender add-on user directory:
+
 - on macOS: `export BLENDER_ADD_ON_PATH=$HOME/Library/Application\ Support/Blender/2.79/scripts/addons`
 - on linux: `export BLENDER_ADD_ON_PATH=$HOME/.config/blender/2.76/scripts/addons`
 
-Install the plugin by applying the following commands:
+Install the add-on by applying the following commands:
 
 ```
 mkdir -p $BLENDER_ADD_ON_PATH/export_webots
@@ -28,27 +31,30 @@ cp __init__.py "$BLENDER_ADD_ON_PATH/export_webots"
 cp export_webots.py "$BLENDER_ADD_ON_PATH/export_webots"
 ```
 
-Enable the "Webots exporter" add-on in `Blender / Preferences / Add-ons / Testing`.
+Enable the "Webots exporter" add-on in `Blender / Preferences / Add-ons / Community`.
 
-## JSON Data File Specifications
+## JSON Conversion File Specifications
 
-[The data JSON file](https://en.wikipedia.org/wiki/JSON) specifies how to convert the Blender nodes to Webots ones.
+The [JSON](https://en.wikipedia.org/wiki/JSON) conversion file specifies how to convert the Blender nodes to Webots ones.
 
-It is basically a JSON Object (i.e. key-value associative array) containing the conversion rules for each node.
-During the exportation, if a key of this JSON Object match with the slugified Blender node name, then its value (the conversion JSON Object) is used for the conversion.
+It is basically a JSON Object (i.e. key-value associative array) containing a conversion rule for each node.
+During the exportation, when a key of this JSON Object matches with the slugified Blender node name, then its value (a JSON Object) is used for the conversion.
 
-A conversion JSON Object could contain the following conversion rules:
+The conversion JSON Object could contain the following conversion rules:
 
-- `target node`: JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`.
-- `fields`: JSON Object which can contain any Webots node fields. The conversion tool will add like it as-is. It is convenient to add device-specific fields, like `Camera.width`, etc.
-- `physics`: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`)
-- `boundingObject`: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject.
+- `target node` [required]: JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`.
+- `fields` [optional]: JSON Object which can contain any Webots node fields. The conversion tool will add these fields as-is. It is convenient to add device specific fields, like `Camera.width`, `Emitter.name`, etc.
 
-The following conversion rules are only available in the case of a `Joint` type:
+The following conversion rules are only available in the case of a `Solid` node (or derived):
 
-- `jointParameters`: JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`).
-- `motor`: JSON Object which can contain the [Webots LinearMotor or RotationalMotor node](https://www.cyberbotics.com/doc/reference/rotationalmotor) fields (like `name`, `maxTorque`, `maxPosition` or `maxVelocity`)
-- `positionSensor`: JSON Object which can contain the [Webots PositionSensor node](https://www.cyberbotics.com/doc/reference/positionsensor) fields (like `name`)
+- `physics` [optional]: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`). If this key is not defined, then no `Physics` node is not generated (the Solid can be pinned to the static environment, or controlled using kinematics rules.)
+- `boundingObject` [optional]: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject. If this key is not defined, then no collision object is generated.
+
+The following conversion rules are only available in the case of a `Joint` node:
+
+- `jointParameters` [optional]: JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`).
+- `motor` [optional]: JSON Object which can contain the [Webots LinearMotor or RotationalMotor node](https://www.cyberbotics.com/doc/reference/rotationalmotor) fields (like `name`, `maxTorque`, `maxPosition` or `maxVelocity`)
+- `positionSensor` [optional]: JSON Object which can contain the [Webots PositionSensor node](https://www.cyberbotics.com/doc/reference/positionsensor) fields (like `name`)
 
 Examples:
 
