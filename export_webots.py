@@ -154,7 +154,10 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             if 'fields' in node_conversion_data:
                 for fieldName in node_conversion_data['fields'].keys():
                     fieldValue = node_conversion_data['fields'][fieldName]
-                    fw('%s %s\n' % (fieldName, str(fieldValue)))
+                    if fieldName == "name":
+                        fw('%s "%s"\n' % (fieldName, str(fieldValue)))
+                    else:
+                        fw('%s %s\n' % (fieldName, str(fieldValue)))
             if 'boundingObject' in node_conversion_data:
                 if 'custom' in node_conversion_data['boundingObject']:
                     fw('boundingObject ')
