@@ -95,8 +95,8 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         if isWebotsNode:
             fw('DEF %s ' % def_id)
             node_conversion_data = conversion_data[def_id]
-            fw('%s {\n' % node_conversion_data['type'])
-            joint = 'Joint' in node_conversion_data['type']
+            fw('%s {\n' % node_conversion_data['target node'])
+            joint = 'Joint' in node_conversion_data['target node']
         elif identity:
             return (True, False)  # Skipped useless transform.
         else:
@@ -107,8 +107,8 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         if joint:
             node_conversion_data = conversion_data[def_id]
             if 'jointParameters' in node_conversion_data:
-                fw('jointParameters %sJointParameters {\n' % ('Hinge' if 'Hinge' in node_conversion_data['type'] else ''))
-                if not identityTranslation and 'Hinge' in node_conversion_data['type']:
+                fw('jointParameters %sJointParameters {\n' % ('Hinge' if 'Hinge' in node_conversion_data['target node'] else ''))
+                if not identityTranslation and 'Hinge' in node_conversion_data['target node']:
                     fw('anchor %.6g %.6g %.6g\n' % translation[:])
                 for fieldName in node_conversion_data['jointParameters'].keys():
                     fieldValue = node_conversion_data['jointParameters'][fieldName]
@@ -117,7 +117,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             fw('device [\n')
             if 'motor' in node_conversion_data:
                 motor = node_conversion_data['motor']
-                if 'Hinge' in node_conversion_data['type']:
+                if 'Hinge' in node_conversion_data['target node']:
                     fw('RotationalMotor {\n')
                 else:
                     fw('LinearMotor {\n')
@@ -157,7 +157,9 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                     fw('%s %s\n' % (fieldName, str(fieldValue)))
             if 'boundingObject' in node_conversion_data:
                 if 'custom' in node_conversion_data['boundingObject']:
-                    fw('boundingObject %s\n' % node_conversion_data['boundingObject']['custom'])
+                    fw('boundingObject ')
+                    for line in node_conversion_data['boundingObject']['custom'].split('\n'):
+                        fw('%s\n' % line)
                 else:
                     fw('boundingObject Transform {\n')
                     x = 0.5 * (max([v[0] for v in obj.bound_box]) + min([v[0] for v in obj.bound_box]))
@@ -282,22 +284,27 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                             is_smooth = True
                             break
 
-                    fw('appearance PBRAppearance {\n')
+                    material_def_name = slugify(material.name)
+                    if material_def_name in conversion_data and 'target node' in conversion_data[material_def_name]:
+                        fw('appearance %s {\n' % (conversion_data[material_def_name]['target node']))
+                        fw('}\n')
+                    else:
+                        fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
 
-                    if image:
-                        write_image_texture(image)
+                        if image:
+                            write_image_texture(image)
 
-                    if material:
-                        diffuse = material.diffuse_color[:]
-                        ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
-                        emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
+                        if material:
+                            diffuse = material.diffuse_color[:]
+                            ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
+                            emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
 
-                        fw('baseColor %.6g %.6g %.6g\n' % clamp_color(diffuse))
-                        fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
-                        fw('metalness 0\n')
-                        fw('roughness 0.5\n')
+                            fw('baseColor %.6g %.6g %.6g\n' % clamp_color(diffuse))
+                            fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
+                            fw('metalness 0\n')
+                            fw('roughness 0.5\n')
 
-                    fw('}\n')  # -- PBRAppearance
+                        fw('}\n')  # -- PBRAppearance
 
                     mesh_faces_uv = mesh.tessface_uv_textures.active.data if is_uv else None
 
@@ -504,6 +511,10 @@ def save(context, filepath, *, use_selection=True, use_mesh_modifiers=False, con
         global_matrix = mathutils.Matrix()
 
     conversion_data = {}
+
+    if not converstion_file_path or not os.path.isfile(converstion_file_path):
+        converstion_file_path = bpy.data.filepath.replace('.blend', '.json')
+
     if converstion_file_path and os.path.isfile(converstion_file_path):
         with open(converstion_file_path) as f:
             conversion_data = json.load(f)

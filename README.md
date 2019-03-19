@@ -39,7 +39,7 @@ During the exportation, if a key of this JSON Object match with the slugified Bl
 
 A conversion JSON Object could contain the following conversion rules:
 
-- `type`: JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`.
+- `target node`: JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`.
 - `fields`: JSON Object which can contain any Webots node fields. The conversion tool will add like it as-is. It is convenient to add device-specific fields, like `Camera.width`, etc.
 - `physics`: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`)
 - `boundingObject`: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject.

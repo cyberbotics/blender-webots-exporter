@@ -1,12 +1,11 @@
 {
   "BASE": {
-    "type": "Robot",
+    "target node": "Robot",
     "boundingObject": {
-      "custom": "Sphere { radius 0.1 }"
     }
   },
   "LINK_A": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "0 0 1"
     },
@@ -26,7 +25,7 @@
     }
   },
   "LINK_B": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "0 1 0"
     },
@@ -46,7 +45,7 @@
     }
   },
   "LINK_C": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "0 1 0"
     },
@@ -66,7 +65,7 @@
     }
   },
   "LINK_D": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "1 0 0"
     },
@@ -86,7 +85,7 @@
     }
   },
   "LINK_E": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "0 1 0"
     },
@@ -106,7 +105,7 @@
     }
   },
   "LINK_F": {
-    "type": "HingeJoint",
+    "target node": "HingeJoint",
     "jointParameters": {
       "axis": "1 0 0"
     },
@@ -123,7 +122,10 @@
       "density": 100
     },
     "boundingObject": {
-      "custom": "Transform {\ntranslation -0.01 0 0\nrotation 0 0 1 1.5708\nchildren [\n  Cylinder {\n  height 0.04\n  radius 0.065\n  }\n]\n}"
+      "custom": "Transform {\ntranslation -0.01 0 0\nrotation 0 0 1 1.5708\nchildren [\nCylinder {\nheight 0.04\nradius 0.065\n}\n]\n}"
     }
+  },
+  "METAL": {
+    "target node": "BrushedAluminium"
   }
 }
