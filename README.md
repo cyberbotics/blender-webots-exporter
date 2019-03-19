@@ -37,6 +37,8 @@ Enable the "Webots exporter" add-on in `Blender / Preferences / Add-ons / Commun
 
 The [JSON](https://en.wikipedia.org/wiki/JSON) conversion file specifies how to convert the Blender nodes to Webots ones.
 
+If not specified in the parameters, the JSON conversion file is searched in the same path as the `.blend` file.
+
 It is basically a JSON Object (i.e. key-value associative array) containing a conversion rule for each node.
 During the exportation, when a key of this JSON Object matches with the slugified Blender node name, then its value (a JSON Object) is used for the conversion.
 
