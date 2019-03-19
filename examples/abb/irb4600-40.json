@@ -8,11 +8,13 @@
   "LINK_A": {
     "type": "HingeJoint",
     "jointParameters": {
-      "axis": "0 0 -1"
+      "axis": "0 0 1"
     },
     "motor": {
       "name": "A motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -3.1415,
+      "maxPosition": 3.1415
     },
     "positionSensor": {
       "name": "A sensor"
@@ -26,11 +28,13 @@
   "LINK_B": {
     "type": "HingeJoint",
     "jointParameters": {
-      "axis": "0 -1 0"
+      "axis": "0 1 0"
     },
     "motor": {
       "name": "B motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -1.5708,
+      "maxPosition": 2.61799
     },
     "positionSensor": {
       "name": "B sensor"
@@ -44,11 +48,13 @@
   "LINK_C": {
     "type": "HingeJoint",
     "jointParameters": {
-      "axis": "0 -1 0"
+      "axis": "0 1 0"
     },
     "motor": {
       "name": "C motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -3.1415,
+      "maxPosition": 1.309
     },
     "positionSensor": {
       "name": "C sensor"
@@ -66,7 +72,9 @@
     },
     "motor": {
       "name": "D motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -6.98132,
+      "maxPosition": 6.98132
     },
     "positionSensor": {
       "name": "D sensor"
@@ -84,7 +92,9 @@
     },
     "motor": {
       "name": "E motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -2.18166,
+      "maxPosition": 2.0944
     },
     "positionSensor": {
       "name": "E sensor"
@@ -102,7 +112,9 @@
     },
     "motor": {
       "name": "F motor",
-      "maxTorque": 10000
+      "maxTorque": 10000,
+      "minPosition": -6.98132,
+      "maxPosition": 6.98132
     },
     "positionSensor": {
       "name": "F sensor"
