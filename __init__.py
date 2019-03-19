@@ -69,7 +69,6 @@ class ExportWebots(bpy.types.Operator, ExportHelper, IOX3DOrientationHelper):
     converstion_file_path = StringProperty(
         name='Custom conversion File Path',
         description='File path targeting the JSON file containing the custom Blender->Webots conversion rules.',
-        subtype='FILE_PATH',
         default=''
     )
     global_scale = FloatProperty(
