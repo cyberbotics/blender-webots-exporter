@@ -49,7 +49,7 @@ The conversion JSON Object could contain the following conversion rules:
 
 The following conversion rules are only available in the case of a `Solid` node (or derived):
 
-- `physics` [optional]: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`). If this key is not defined, then no `Physics` node is not generated (the Solid can be pinned to the static environment, or controlled using kinematics rules.)
+- `physics` [optional]: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`). If this key is not defined, then no `Physics` node is generated (the Solid can be pinned to the static environment, or controlled using kinematics rules.)
 - `boundingObject` [optional]: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject. If this key is not defined, then no collision object is generated.
 
 The following conversion rules are only available in the case of a `Joint` node:
