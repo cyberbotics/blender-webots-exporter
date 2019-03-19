@@ -46,19 +46,25 @@ During the exportation, when a key of this JSON Object matches with the slugifie
 
 The conversion JSON Object could contain the following conversion rules:
 
-- `target node` [required]: JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`.
-- `fields` [optional]: JSON Object which can contain any Webots node fields. The conversion tool will add these fields as-is. It is convenient to add device specific fields, like `Camera.width`, `Emitter.name`, etc.
+| Key | Flags | Value |
+| --- | --- | --- |
+| `target node` | _required_ | JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`. |
+| `fields` | _optional_ | JSON Object which can contain any Webots node fields. The conversion tool will add these fields as-is. It is convenient to add device specific fields, like `Camera.width`, `Emitter.name`, etc. |
 
 The following conversion rules are only available in the case of a `Solid` node (or derived):
 
-- `physics` [optional]: JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`). If this key is not defined, then no `Physics` node is generated (the Solid can be pinned to the static environment, or controlled using kinematics rules.)
-- `boundingObject` [optional]: JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject. If this key is not defined, then no collision object is generated.
+| Key | Flags | Value |
+| --- | --- | --- |
+| `physics` | _optional_ | JSON Object which can contain the [Webots Physics node](https://www.cyberbotics.com/doc/reference/physics) fields (like `mass`, `density` and `centerOfMass`). If this key is not defined, then no `Physics` node is generated (the Solid can be pinned to the static environment, or controlled using kinematics rules.) |
+| `boundingObject` | _optional_ | JSON Object which can contain either a JSON String called `custom` to define the content of the [Webots Solid.boundingObject field](https://www.cyberbotics.com/doc/reference/solid) fields. If `custom` is not defined, then the AABB box of the Blender object is used to create the boundingObject. If this key is not defined, then no collision object is generated. |
 
 The following conversion rules are only available in the case of a `Joint` node:
 
-- `jointParameters` [optional]: JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`).
-- `motor` [optional]: JSON Object which can contain the [Webots LinearMotor or RotationalMotor node](https://www.cyberbotics.com/doc/reference/rotationalmotor) fields (like `name`, `maxTorque`, `maxPosition` or `maxVelocity`)
-- `positionSensor` [optional]: JSON Object which can contain the [Webots PositionSensor node](https://www.cyberbotics.com/doc/reference/positionsensor) fields (like `name`)
+| Key | Flags | Value |
+| --- | --- | --- |
+| `jointParameters` | _optional_ | JSON Object which can contain the [Webots (Hinge)JointParameters node](https://www.cyberbotics.com/doc/reference/jointparameters) fields (like `axis`, `spring/dampingConstant` and `suspension*`). |
+| `motor` | _optional_ | JSON Object which can contain the [Webots LinearMotor or RotationalMotor node](https://www.cyberbotics.com/doc/reference/rotationalmotor) fields (like `name`, `maxTorque`, `maxPosition` or `maxVelocity`) |
+| `positionSensor` | _optional_ | JSON Object which can contain the [Webots PositionSensor node](https://www.cyberbotics.com/doc/reference/positionsensor) fields (like `name`) |
 
 Examples:
 
