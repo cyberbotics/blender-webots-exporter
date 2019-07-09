@@ -434,7 +434,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             images = [f.replace('\\', '/') for f in images]
             images = [f for i, f in enumerate(images) if f not in images[:i]]
 
-            fw('url [ "%s" ]\n' % ' '.join(['"%s"' % escape(f) for f in images]))
+            fw('url [ %s ]\n' % ' '.join(['"%s"' % escape(f) for f in images]))
             fw('}\n')
 
     def export_object(obj_main_parent, obj_main, obj_children):
