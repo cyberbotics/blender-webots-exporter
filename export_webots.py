@@ -333,6 +333,8 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                                 fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
                                 fw('metalness 0\n')
                                 fw('roughness 0.5\n')
+                                if material.use_transparency:
+                                    fw('transparency %f\n' % (1.0 - material.alpha))
 
                             fw('}\n')  # -- PBRAppearance
 
