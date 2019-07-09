@@ -289,7 +289,12 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
 
                     material_def_name = slugify(material.name)
                     if material_def_name in conversion_data and 'target node' in conversion_data[material_def_name]:
-                        fw('appearance %s {\n' % (conversion_data[material_def_name]['target node']))
+                        material_data = conversion_data[material_def_name]
+                        fw('appearance %s {\n' % (material_data['target node']))
+                        if 'fields' in material_data:
+                            for fieldName in material_data['fields'].keys():
+                                fieldValue = material_data['fields'][fieldName]
+                                fw('%s %s\n' % (fieldName, str(fieldValue)))
                         fw('}\n')
                     else:
                         fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
