@@ -48,7 +48,7 @@ The conversion JSON Object could contain the following conversion rules:
 
 | Key | Flags | Value |
 | --- | --- | --- |
-| `target node` | _required_ | JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint` or `SliderJoint`. |
+| `target node` | _required_ | JSON String defining to which Webots node the Blender node should be converted. For example, it could be `Solid`, `Robot`, `Camera`, `HingeJoint`, `SliderJoint` or a custom Webots appearance node (like `BrushedAluminium`). |
 | `fields` | _optional_ | JSON Object which can contain any Webots node fields. The conversion tool will add these fields as-is. It is convenient to add device specific fields, like `Camera.width`, `Emitter.name`, etc. |
 
 The following conversion rules are only available in the case of a `Solid` node (or derived):
