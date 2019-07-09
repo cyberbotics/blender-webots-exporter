@@ -414,7 +414,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         else:
             image.tag = True
 
-            fw('texture ')
+            fw('baseColorMap ')
             fw('DEF %s ' % image_id)
             fw('ImageTexture {\n')
 
