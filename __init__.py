@@ -15,7 +15,7 @@
 bl_info = {
     'name': 'Webots format',
     'author': 'Fabien Rohrer',
-    'version': (1, 0, 0),
+    'version': (1, 1, 0),
     'blender': (2, 79, 0),
     'location': 'File > Import-Export',
     'description': 'Export Webots',
