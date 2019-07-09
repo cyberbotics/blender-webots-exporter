@@ -90,6 +90,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
         identity = identityTranslation and identityRotation and identityScale
 
         joint = False
+        propeller = False
 
         isWebotsNode = def_id in conversion_data
         if isWebotsNode:
@@ -97,6 +98,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
             node_conversion_data = conversion_data[def_id]
             fw('%s {\n' % node_conversion_data['target node'])
             joint = 'Joint' in node_conversion_data['target node']
+            propeller = 'Propeller' == node_conversion_data['target node']
         elif identity:
             return (True, False)  # Skipped useless transform.
         else:
@@ -140,6 +142,26 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                 fw('}\n')
             fw(']\n')
             fw('endPoint Solid {\n')
+            if 'motor' in node_conversion_data and 'name' in node_conversion_data['motor']:
+                fw('name "%s"\n' % node_conversion_data['motor']['name'])
+        elif propeller:
+            node_conversion_data = conversion_data[def_id]
+            fw('centerOfThrust %.6g %.6g %.6g\n' % translation[:])
+            if 'propellerFields' in node_conversion_data:
+                for fieldName in node_conversion_data['propellerFields'].keys():
+                    fieldValue = node_conversion_data['propellerFields'][fieldName]
+                    fw('%s %s\n' % (fieldName, str(fieldValue)))
+            if 'motor' in node_conversion_data:
+                motor = node_conversion_data['motor']
+                fw('device RotationalMotor {\n')
+                for fieldName in motor.keys():
+                    fieldValue = motor[fieldName]
+                    if fieldName == "name":
+                        fw('%s "%s"\n' % (fieldName, str(fieldValue)))
+                    else:
+                        fw('%s %s\n' % (fieldName, str(fieldValue)))
+                fw('}\n')
+            fw('slowHelix Solid {\n')
             if 'motor' in node_conversion_data and 'name' in node_conversion_data['motor']:
                 fw('name "%s"\n' % node_conversion_data['motor']['name'])
 
@@ -186,7 +208,7 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
 
         fw('children [\n')
 
-        return (False, joint)
+        return (False, joint or propeller)
 
     def write_transform_end(supplementaryCurvyBracket):
         fw(']\n')
