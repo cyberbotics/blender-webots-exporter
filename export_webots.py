@@ -276,8 +276,6 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
 
             for (material_index, image), face_group in face_groups_items:  # face_groups.items()
                 if face_group:
-                    material = mesh_materials[material_index]
-
                     fw('Shape {\n')
 
                     is_smooth = False
@@ -287,32 +285,34 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                             is_smooth = True
                             break
 
-                    material_def_name = slugify(material.name)
-                    if material_def_name in conversion_data and 'target node' in conversion_data[material_def_name]:
-                        material_data = conversion_data[material_def_name]
-                        fw('appearance %s {\n' % (material_data['target node']))
-                        if 'fields' in material_data:
-                            for fieldName in material_data['fields'].keys():
-                                fieldValue = material_data['fields'][fieldName]
-                                fw('%s %s\n' % (fieldName, str(fieldValue)))
-                        fw('}\n')
-                    else:
-                        fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
+                    material = mesh_materials[material_index]
+                    if material is not None:
+                        material_def_name = slugify(material.name)
+                        if material_def_name in conversion_data and 'target node' in conversion_data[material_def_name]:
+                            material_data = conversion_data[material_def_name]
+                            fw('appearance %s {\n' % (material_data['target node']))
+                            if 'fields' in material_data:
+                                for fieldName in material_data['fields'].keys():
+                                    fieldValue = material_data['fields'][fieldName]
+                                    fw('%s %s\n' % (fieldName, str(fieldValue)))
+                            fw('}\n')
+                        else:
+                            fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
 
-                        if image:
-                            write_image_texture(image)
+                            if image:
+                                write_image_texture(image)
 
-                        if material:
-                            diffuse = material.diffuse_color[:]
-                            ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
-                            emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
+                            if material:
+                                diffuse = material.diffuse_color[:]
+                                ambient = ((material.ambient * 2.0) * world.ambient_color)[:] if world else [0.0, 0.0, 0.0]
+                                emissive = tuple(((c * material.emit) + ambient[i]) / 2.0 for i, c in enumerate(diffuse))
 
-                            fw('baseColor %.6g %.6g %.6g\n' % clamp_color(diffuse))
-                            fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
-                            fw('metalness 0\n')
-                            fw('roughness 0.5\n')
+                                fw('baseColor %.6g %.6g %.6g\n' % clamp_color(diffuse))
+                                fw('emissiveColor %.6g %.6g %.6g\n' % clamp_color(emissive))
+                                fw('metalness 0\n')
+                                fw('roughness 0.5\n')
 
-                        fw('}\n')  # -- PBRAppearance
+                            fw('}\n')  # -- PBRAppearance
 
                     mesh_faces_uv = mesh.tessface_uv_textures.active.data if is_uv else None
 
