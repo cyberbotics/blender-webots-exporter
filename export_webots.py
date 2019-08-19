@@ -319,7 +319,10 @@ def export(file, global_matrix, scene, use_mesh_modifiers=False, use_selection=T
                                     fw('%s %s\n' % (fieldName, str(fieldValue)))
                             fw('}\n')
                         else:
-                            fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
+                            if material_def_name:
+                                fw('appearance DEF %s PBRAppearance {\n' % (material_def_name))
+                            else:
+                                fw('appearance PBRAppearance {\n')
 
                             if image:
                                 write_image_texture(image)
