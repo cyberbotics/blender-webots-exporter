@@ -68,7 +68,7 @@ The following conversion rules are only available in the case of a `Joint` node:
 
 Examples:
 
-https://github.com/omichel/blender-webots-exporter/tree/master/examples
+https://github.com/cyberbotics/blender-webots-exporter/tree/master/examples
 
 
 ## References
