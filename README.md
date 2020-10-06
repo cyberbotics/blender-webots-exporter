@@ -15,7 +15,7 @@ Blender add-on to export your Blender project to Webots.
 
 ## Requirements
 
-- [Blender 2.79b](https://www.blender.org)
+- [Blender 2.79b](https://download.blender.org/release/Blender2.79/)
 - [Webots R2019a.rev1](https://www.cyberbotics.com) or later
 
 ## Installation and Update
@@ -24,6 +24,12 @@ Let say `$BLENDER_ADD_ON_PATH` is the Blender add-on user directory:
 
 - on macOS: `export BLENDER_ADD_ON_PATH=$HOME/Library/Application\ Support/Blender/2.79/scripts/addons`
 - on linux: `export BLENDER_ADD_ON_PATH=$HOME/.config/blender/2.79/scripts/addons`
+- on windows:
+  - go to `Blender / Preferences / File / Scripts` and paste `C:\Users\username\AppData\Roaming\Blender Foundation\Blender\2.79\scripts`. (replace username)
+  - for the following steps, use the pasted address as `$BLENDER_ADD_ON_PATH`.
+
+            
+      
 
 Install the add-on by applying the following commands:
 
