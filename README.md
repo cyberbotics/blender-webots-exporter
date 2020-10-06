@@ -28,9 +28,6 @@ Let say `$BLENDER_ADD_ON_PATH` is the Blender add-on user directory:
   - go to `Blender / Preferences / File / Scripts` and paste `C:\Users\username\AppData\Roaming\Blender Foundation\Blender\2.79\scripts`. (replace username)
   - for the following steps, use the pasted address as `$BLENDER_ADD_ON_PATH`.
 
-            
-      
-
 Install the add-on by applying the following commands:
 
 ```
